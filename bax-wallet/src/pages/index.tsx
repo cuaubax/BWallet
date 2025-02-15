@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Layout } from '../components/Layout';
-import { WalletBalance } from '../components/WalletBalance'
+import { WalletBalance } from '../components/WalletBalance';
+import { TabContent } from '../components/Tabs'
 import { Geist, Geist_Mono } from "next/font/google";
 
 const geistSans = Geist({
@@ -18,8 +19,8 @@ export default function Home() {
     <Layout>
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">BaxB Wallet</h1>
-        <p className="text-gray-600">Connect your wallet to get started</p>
         <WalletBalance/>
+        <TabContent />
       </div>
     </Layout>
   )

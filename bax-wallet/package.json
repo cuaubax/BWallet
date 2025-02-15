@@ -9,10 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@1inch/fusion-sdk": "^2.2.2",
+    "@cowprotocol/widget-lib": "^0.18.0",
     "@rainbow-me/rainbowkit": "^2.2.3",
     "@reown/appkit": "^1.6.8",
     "@reown/appkit-adapter-wagmi": "^1.6.8",
     "@tanstack/react-query": "^5.66.0",
+    "@uniswap/sdk-core": "^7.5.0",
+    "@uniswap/smart-order-router": "^4.18.1",
+    "@uniswap/v3-sdk": "^3.24.0",
+    "@uniswap/widgets": "^2.59.0",
+    "alchemy-sdk": "^3.5.3",
+    "axios": "^1.7.9",
     "ethers": "^6.13.5",
     "next": "15.1.7",
     "react": "^19.0.0",
