@@ -22,8 +22,8 @@ export const SwapWidget = () => {
           "https://files.cow.fi/tokens/CowSwap.json"
         ],
         tradeType: TradeType.SWAP,
-        standaloneMode: true,
-        theme: "dark",
+        standaloneMode: true, // could we use the already existing wallet connection? 
+        theme: "light",
       }
 
       createCowSwapWidget(containerRef.current, { 
