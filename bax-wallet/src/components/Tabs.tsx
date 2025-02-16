@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { TransactionHistory } from './TransactionHistory'
 import { SwapWidget } from './SwapWidget'
 import { AaveComponent } from './EarnWidget'
+import { BatchTransfer } from './Dispersions'
 
 export const TabContent = () => {
-  const [activeTab, setActiveTab] = useState<'transactions' | 'swap' | 'earn'>('transactions')
+  const [activeTab, setActiveTab] = useState<'transactions' | 'dispersions' | 'swap' | 'earn'>('transactions')
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -19,6 +20,16 @@ export const TabContent = () => {
           onClick={() => setActiveTab('transactions')}
         >
           Transactions
+        </button>
+        <button
+          className={`pb-2 px-4 ${
+            activeTab === 'dispersions'
+              ? 'border-b-2 border-blue-500 text-blue-500'
+              : 'text-gray-500'
+          }`}
+          onClick={() => setActiveTab('dispersions')}
+        >
+          Dispersions
         </button>
         <button
           className={`pb-2 px-4 ${
@@ -45,6 +56,7 @@ export const TabContent = () => {
       {/* Tab Content */}
       <div>
         {activeTab === 'transactions' && <TransactionHistory />}
+        {activeTab === 'dispersions' && <BatchTransfer />}
         {activeTab === 'swap' && <SwapWidget />}
         {activeTab === 'earn' && <AaveComponent />}
       </div>

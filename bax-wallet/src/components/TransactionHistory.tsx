@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { getAlchemyClient } from '../config/alchemy'
 import { AssetTransfersWithMetadataResult, AssetTransfersCategory } from 'alchemy-sdk'
 
+// Reading ranbow-kit docs it seems like we might be able to get
+// transaction history straight from it, no need for alchemy
+
 // TODO: Might need modify this based on
 // the selected chain, keeping external,
 // ERC20 and ERC721 for testing purposes atm
