@@ -16,17 +16,6 @@ const CATEGORIES = [
     AssetTransfersCategory.ERC721
   ]
 
-// TODO: Need to come up with a better way
-// searching since genesis block might work
-// ok in testnet 
-const TRANSFERS_CONFIG = {
-    fromBlock: "0x0",
-    category: CATEGORIES,
-    withMetadate: true,
-    // Also check this, what if we want more?
-    maxCount: 5,
-} as const
-
 export const TransactionHistory = () => {
   const [mounted, setMounted] = useState(false)
   const [sentTxs, setSentTxs] = useState<AssetTransfersWithMetadataResult[]>([])

@@ -1,4 +1,3 @@
-import { useAccount } from 'wagmi'
 import { useEffect, useState, useRef } from 'react'
 import { createCowSwapWidget, CowSwapWidgetParams, TradeType } from '@cowprotocol/widget-lib'
 

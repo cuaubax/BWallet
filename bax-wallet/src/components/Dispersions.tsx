@@ -1,4 +1,4 @@
-import { useAccount, useWalletClient, useChainId} from 'wagmi'
+import { useWalletClient, useChainId} from 'wagmi'
 import { useEffect, useState } from 'react'
 import { writeContract } from '@wagmi/core'
 import { config } from '../config/web3'
@@ -40,7 +40,6 @@ export const BatchTransfer = () => {
   const [tokenAddress, setTokenAddress] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const { address, isConnected } = useAccount()
   const { data: walletClient } = useWalletClient()
   const chainId = useChainId()
 
@@ -68,7 +67,8 @@ export const BatchTransfer = () => {
         )
         const tx = await token.approve(BATCH_TRANSFER_ADDRESS, totalAmount)
         await tx.wait()
-    } catch (error: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) { 
         if (error.code === 'ACTION_REJECTED' || error.code === 4001) {
             console.log('User rejected the transaction.')
         } else {
