@@ -1,8 +1,8 @@
-import { useAccount, useWalletClient } from 'wagmi'
+import { useAccount, useWalletClient, useChainId} from 'wagmi'
 import { useEffect, useState } from 'react'
 import { writeContract } from '@wagmi/core'
 import { config } from '../config/web3'
-import { ethers, parseUnits } from 'ethers'
+import { ethers } from 'ethers'
 
 const BATCH_TRANSFER_ABI = [
   {
@@ -30,6 +30,7 @@ const BATCH_TRANSFER_ABI = [
 
 // Need to change it depending on the network. We use Sepolia's contract address for POC 
 const BATCH_TRANSFER_ADDRESS = '0x09579e61a95792be2440fe2da011ec47fbfc9861' as `0x${string}`
+const SEPOLIA = 11155111
 
 export const BatchTransfer = () => {
   const [mounted, setMounted] = useState(false)
@@ -39,22 +40,20 @@ export const BatchTransfer = () => {
   const [tokenAddress, setTokenAddress] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Get connected account info (if needed)
   const { address, isConnected } = useAccount()
   const { data: walletClient } = useWalletClient()
+  const chainId = useChainId()
 
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Helper to get the signer using window.ethereum
   async function getSigner() {
     if (!walletClient) {
       throw new Error('No wallet client found. Connect your wallet first!')
     }
     const { transport } = walletClient
-    // For ethers v6, use BrowserProvider. Then getSigner().
     const provider = new ethers.BrowserProvider(transport)
     return provider.getSigner()
   }
@@ -87,7 +86,6 @@ export const BatchTransfer = () => {
       if (isERC20) {
         // Also needs some work, decimal places will vary form
         // token to token and from chain to chain
-
         const parsedAmounts = amounts.map(amt =>
             ethers.parseUnits(amt.trim(), 18).toString()
           )
@@ -134,77 +132,86 @@ export const BatchTransfer = () => {
 
   if (!mounted) return null
 
-  return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-6">Batch Transfer</h2>
-
-      {/* Token Type Selection */}
-      <div className="mb-4">
-        <div className="flex space-x-4">
+  if (chainId === SEPOLIA) {
+    return (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold mb-6">Batch Transfer</h2>
+    
+          {/* Token Type Selection */}
+          <div className="mb-4">
+            <div className="flex space-x-4">
+              <button
+                className={`px-4 py-2 rounded ${
+                  !isERC20 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+                onClick={() => setIsERC20(false)}
+              >
+                ETH
+              </button>
+              <button
+                className={`px-4 py-2 rounded ${
+                  isERC20 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+                onClick={() => setIsERC20(true)}
+              >
+                ERC20
+              </button>
+            </div>
+          </div>
+    
+          {/* ERC20 Token Address Input */}
+          {isERC20 && (
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Token Address"
+                className="w-full p-2 border rounded"
+                value={tokenAddress}
+                onChange={(e) => setTokenAddress(e.target.value)}
+              />
+            </div>
+          )}
+    
+          {/* Recipients Input */}
+          <div className="mb-4">
+            <textarea
+              placeholder="Enter addresses (one per line)"
+              className="w-full p-2 border rounded"
+              rows={5}
+              onChange={(e) =>
+                setRecipients(e.target.value.split('\n').filter((line) => line.trim()))
+              }
+            />
+          </div>
+    
+          {/* Amounts Input */}
+          <div className="mb-4">
+            <textarea
+              placeholder="Enter amounts (one per line)"
+              className="w-full p-2 border rounded"
+              rows={5}
+              onChange={(e) =>
+                setAmounts(e.target.value.split('\n').filter((line) => line.trim()))
+              }
+            />
+          </div>
+    
+          {/* Transfer Button */}
           <button
-            className={`px-4 py-2 rounded ${
-              !isERC20 ? 'bg-blue-500 text-white' : 'bg-gray-200'
-            }`}
-            onClick={() => setIsERC20(false)}
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-300"
+            onClick={handleTransfer}
+            disabled={isLoading}
           >
-            ETH
-          </button>
-          <button
-            className={`px-4 py-2 rounded ${
-              isERC20 ? 'bg-blue-500 text-white' : 'bg-gray-200'
-            }`}
-            onClick={() => setIsERC20(true)}
-          >
-            ERC20
+            {isLoading ? 'Processing...' : 'Transfer'}
           </button>
         </div>
-      </div>
-
-      {/* ERC20 Token Address Input */}
-      {isERC20 && (
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Token Address"
-            className="w-full p-2 border rounded"
-            value={tokenAddress}
-            onChange={(e) => setTokenAddress(e.target.value)}
-          />
+      )
+  } else {
+    return (
+        <div className="w-full p-6 bg-red-600 text-white text-lg font-semibold text-center rounded-lg shadow-lg">
+            🚫 This feature is unavailable on the current network. Please switch to the correct network.
         </div>
-      )}
+    )
+  }
 
-      {/* Recipients Input */}
-      <div className="mb-4">
-        <textarea
-          placeholder="Enter addresses (one per line)"
-          className="w-full p-2 border rounded"
-          rows={5}
-          onChange={(e) =>
-            setRecipients(e.target.value.split('\n').filter((line) => line.trim()))
-          }
-        />
-      </div>
-
-      {/* Amounts Input */}
-      <div className="mb-4">
-        <textarea
-          placeholder="Enter amounts (one per line)"
-          className="w-full p-2 border rounded"
-          rows={5}
-          onChange={(e) =>
-            setAmounts(e.target.value.split('\n').filter((line) => line.trim()))
-          }
-        />
-      </div>
-
-      {/* Transfer Button */}
-      <button
-        className="w-full bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-300"
-        onClick={handleTransfer}
-        disabled={isLoading}
-      >
-        {isLoading ? 'Processing...' : 'Transfer'}
-      </button>
-    </div>
-  )
 }
