@@ -5,10 +5,13 @@ import { TabContent } from '../components/Tabs'
 export default function Home() {
   return (
     <Layout>
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">BaxB Wallet</h1>
-        <WalletBalance/>
-        <TabContent />
+      <div className="space-y-8">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <WalletBalance />
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <TabContent />
+        </div>
       </div>
     </Layout>
   )
