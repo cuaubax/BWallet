@@ -1,4 +1,3 @@
-// src/components/TransactionHistory.tsx
 import { useAccount, useChainId } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { getAlchemyClient } from '../config/alchemy'
@@ -15,6 +14,18 @@ const CATEGORIES = [
     AssetTransfersCategory.ERC20,
     AssetTransfersCategory.ERC721
   ]
+
+  const chainToExplorerUrl: { [chainId: number]: string } = {
+    11155111: "https://sepolia.etherscan.io/tx/{hash}",
+    11155420: "https://sepolia.optimistic.etherscan.io/tx/{hash}",
+    421614: "https://sepolia.arbiscan.io/tx/{hash}",
+    80002: "https://amoy.polygonscan.com/tx/{hash}",
+  }
+  
+  function getTxUrl(chainId: number, txHash: string): string {
+    const urlTemplate = chainToExplorerUrl[chainId];
+    return urlTemplate ? urlTemplate.replace("{hash}", txHash) : "";
+  }
 
 export const TransactionHistory = () => {
   const [mounted, setMounted] = useState(false)
@@ -69,7 +80,11 @@ export const TransactionHistory = () => {
   const TransactionCardSend = ({ tx }: { tx: AssetTransfersWithMetadataResult }) => (
     <div className="bg-white rounded-lg shadow p-4 mb-4">
       <div className="flex justify-between items-center mb-2">
-        <span className="font-mono text-sm">{tx.hash?.slice(0, 10)}...</span>
+        <span className="font-mono text-sm">
+          <a href={getTxUrl(chainId,tx.hash)} target="_blank" rel="noopener noreferrer">
+          {tx.hash?.slice(0, 10)}...
+          </a>
+        </span>
         <span className="text-gray-600 text-sm">
           {new Date(tx.metadata.blockTimestamp).toLocaleString()}
         </span>
@@ -90,7 +105,11 @@ export const TransactionHistory = () => {
   const TransactionCard = ({ tx }: { tx: AssetTransfersWithMetadataResult }) => (
     <div className="bg-white rounded-lg shadow p-4 mb-4">
       <div className="flex justify-between items-center mb-2">
-        <span className="font-mono text-sm">{tx.hash?.slice(0, 10)}...</span>
+        <span className="font-mono text-sm">
+        <a href={getTxUrl(chainId,tx.hash)} target="_blank" rel="noopener noreferrer">
+          {tx.hash?.slice(0, 10)}...
+        </a>
+        </span>
         <span className="text-gray-600 text-sm">
           {new Date(tx.metadata.blockTimestamp).toLocaleString()}
         </span>
