@@ -18,9 +18,9 @@ export const WalletBalance = () => {
   
     return (
       <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Wallet Balance</h2>
+        <h2 className="text-xl font-semibold mb-4">Saldos</h2>
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">Address:</span>
+          <span className="text-gray-600">Wallet:</span>
           <span className="font-mono">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
         </div>
         <div className="flex justify-between items-center mt-4">

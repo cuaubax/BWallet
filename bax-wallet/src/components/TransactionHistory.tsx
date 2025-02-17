@@ -66,6 +66,27 @@ export const TransactionHistory = () => {
     fetchTransactions()
   }, [address, chainId])
 
+  const TransactionCardSend = ({ tx }: { tx: AssetTransfersWithMetadataResult }) => (
+    <div className="bg-white rounded-lg shadow p-4 mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <span className="font-mono text-sm">{tx.hash?.slice(0, 10)}...</span>
+        <span className="text-gray-600 text-sm">
+          {new Date(tx.metadata.blockTimestamp).toLocaleString()}
+        </span>
+      </div>
+      <div className="text-sm">
+        <p className="truncate">
+          <span className="text-gray-600">Para: </span>
+          {tx.to?.slice(0, 6)}...{tx.to?.slice(-4)}
+        </p>
+        <p>
+          <span className="text-gray-600">Monto: </span>
+          {tx.value} {tx.asset}
+        </p>
+      </div>
+    </div>
+  )
+
   const TransactionCard = ({ tx }: { tx: AssetTransfersWithMetadataResult }) => (
     <div className="bg-white rounded-lg shadow p-4 mb-4">
       <div className="flex justify-between items-center mb-2">
@@ -76,11 +97,11 @@ export const TransactionHistory = () => {
       </div>
       <div className="text-sm">
         <p className="truncate">
-          <span className="text-gray-600">To: </span>
-          {tx.to?.slice(0, 6)}...{tx.to?.slice(-4)}
+          <span className="text-gray-600">Desde: </span>
+          {tx.from?.slice(0, 6)}...{tx.to?.slice(-4)}
         </p>
         <p>
-          <span className="text-gray-600">Value: </span>
+          <span className="text-gray-600">Monto: </span>
           {tx.value} {tx.asset}
         </p>
       </div>
@@ -91,36 +112,36 @@ export const TransactionHistory = () => {
 
   return (
     <div className="bg-gray-50 rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-6">Transaction History</h2>
+      <h2 className="text-xl font-semibold mb-6">Historial de Transferencias</h2>
       
       {loading ? (
-        <div className="text-center py-4">Loading...</div>
+        <div className="text-center py-4">Cargando...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Sent Transactions */}
           <div>
-            <h3 className="text-lg font-medium mb-4 text-red-600">Sent</h3>
+            <h3 className="text-lg font-medium mb-4 text-red-600">Enviadas</h3>
             <div>
               {sentTxs.length > 0 ? (
                 sentTxs.map((tx) => (
-                  <TransactionCard key={tx.uniqueId} tx={tx} />
+                  <TransactionCardSend key={tx.uniqueId} tx={tx} />
                 ))
               ) : (
-                <p className="text-gray-500 text-center">No sent transactions</p>
+                <p className="text-gray-500 text-center">No hay transacciones enviadas</p>
               )}
             </div>
           </div>
 
           {/* Received Transactions */}
           <div>
-            <h3 className="text-lg font-medium mb-4 text-green-600">Received</h3>
+            <h3 className="text-lg font-medium mb-4 text-green-600">Recibidas</h3>
             <div>
               {receivedTxs.length > 0 ? (
                 receivedTxs.map((tx) => (
                   <TransactionCard key={tx.uniqueId} tx={tx} />
                 ))
               ) : (
-                <p className="text-gray-500 text-center">No received transactions</p>
+                <p className="text-gray-500 text-center">No hay transacciones recibidas</p>
               )}
             </div>
           </div>

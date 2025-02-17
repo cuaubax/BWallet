@@ -12,7 +12,7 @@ export const AaveComponent = () => {
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Lend & Borrow</h2>
+      <h2 className="text-xl font-semibold mb-4">Préstamos y Ahorro</h2>
       <iframe
         src="https://app.aave.com/markets/?marketName=proto_sepolia_v3"
         height="500px"

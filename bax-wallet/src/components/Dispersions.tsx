@@ -135,7 +135,7 @@ export const BatchTransfer = () => {
   if (chainId === SEPOLIA) {
     return (
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-6">Batch Transfer</h2>
+          <h2 className="text-xl font-semibold mb-6">Dispersión Múltiple</h2>
     
           {/* Token Type Selection */}
           <div className="mb-4">
@@ -175,7 +175,7 @@ export const BatchTransfer = () => {
           {/* Recipients Input */}
           <div className="mb-4">
             <textarea
-              placeholder="Enter addresses (one per line)"
+              placeholder="Ingrese una direcciónes (una por línea)"
               className="w-full p-2 border rounded"
               rows={5}
               onChange={(e) =>
@@ -187,7 +187,7 @@ export const BatchTransfer = () => {
           {/* Amounts Input */}
           <div className="mb-4">
             <textarea
-              placeholder="Enter amounts (one per line)"
+              placeholder="Ingrese montos (uno por línea)"
               className="w-full p-2 border rounded"
               rows={5}
               onChange={(e) =>
@@ -202,14 +202,14 @@ export const BatchTransfer = () => {
             onClick={handleTransfer}
             disabled={isLoading}
           >
-            {isLoading ? 'Processing...' : 'Transfer'}
+            {isLoading ? 'Procesando...' : 'Transferir'}
           </button>
         </div>
       )
   } else {
     return (
         <div className="w-full p-6 bg-red-600 text-white text-lg font-semibold text-center rounded-lg shadow-lg">
-            🚫 This feature is unavailable on the current network. Please switch to the correct network.
+            🚫 Función no disponible en esta red.
         </div>
     )
   }
