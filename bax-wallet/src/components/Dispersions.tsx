@@ -36,13 +36,13 @@ export const BatchTransfer = () => {
   const [mounted, setMounted] = useState(false)
   const [recipients, setRecipients] = useState<string[]>([])
   const [amounts, setAmounts] = useState<string[]>([])
+  const [csvInput, setCsvInput] = useState('')
   const [isERC20, setIsERC20] = useState(false)
   const [tokenAddress, setTokenAddress] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const { data: walletClient } = useWalletClient()
   const chainId = useChainId()
-
 
   useEffect(() => {
     setMounted(true)
@@ -55,6 +55,37 @@ export const BatchTransfer = () => {
     const { transport } = walletClient
     const provider = new ethers.BrowserProvider(transport)
     return provider.getSigner()
+  }
+
+  const processInputAreaData = (input: string) => {
+    try {
+      const lines = input.split('\n').filter((line) => line.trim())
+
+      const newRecipients: string[] = []
+      const newAmounts: string[] = []
+
+      lines.forEach((line) => {
+        const parts = line.split(',')
+
+        if (parts.length >= 2) {
+          
+          const address = parts[0].trim()
+          const amount = parts[1].trim()
+
+          // Check everythin ok
+          if (ethers.isAddress(address) && amount) {
+            newRecipients.push(address)
+            newAmounts.push(amount)
+          }
+        }
+      })
+
+      setRecipients(newRecipients)
+      setAmounts (newAmounts)
+
+    } catch (error) {
+      console.log("Error input area: ", error)
+    }
   }
 
   const approveToken = async (tokenAddr: string, totalAmount: string) => {
@@ -171,29 +202,21 @@ export const BatchTransfer = () => {
               />
             </div>
           )}
-    
-          {/* Recipients Input */}
+          
           <div className="mb-4">
-            <textarea
-              placeholder="Ingrese una direcciónes (una por línea)"
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Direcciones y montos (formato: dirección,monto - uno por línea)
+              </label>
+              <textarea
+              placeholder="0x1234...5678,0.1&#10;0x8765...4321,0.2&#10;..."
               className="w-full p-2 border rounded"
               rows={5}
-              onChange={(e) =>
-                setRecipients(e.target.value.split('\n').filter((line) => line.trim()))
-              }
-            />
-          </div>
-    
-          {/* Amounts Input */}
-          <div className="mb-4">
-            <textarea
-              placeholder="Ingrese montos (uno por línea)"
-              className="w-full p-2 border rounded"
-              rows={5}
-              onChange={(e) =>
-                setAmounts(e.target.value.split('\n').filter((line) => line.trim()))
-              }
-            />
+              value={csvInput}
+              onChange={(e) => {
+                setCsvInput(e.target.value);
+                processInputAreaData(e.target.value);
+              }}
+              />
           </div>
     
           {/* Transfer Button */}
