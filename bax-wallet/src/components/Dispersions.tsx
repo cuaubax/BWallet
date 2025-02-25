@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { writeContract } from '@wagmi/core'
 import { config } from '../config/web3'
 import { ethers } from 'ethers'
+import Papa from 'papaparse'
 
 const BATCH_TRANSFER_ABI = [
   {
@@ -37,6 +38,7 @@ export const BatchTransfer = () => {
   const [recipients, setRecipients] = useState<string[]>([])
   const [amounts, setAmounts] = useState<string[]>([])
   const [csvInput, setCsvInput] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [isERC20, setIsERC20] = useState(false)
   const [tokenAddress, setTokenAddress] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -59,26 +61,48 @@ export const BatchTransfer = () => {
 
   const processInputAreaData = (input: string) => {
     try {
-      const lines = input.split('\n').filter((line) => line.trim())
 
+      setError(null)
+
+      // There should be a better way to do this
+      // we should not allow empty inputs
+      if (!input.trim()) {
+        setRecipients([])
+        setAmounts([])
+        return
+      }
+
+      const parsedData = Papa.parse(input, {
+        skipEmptyLines: true,
+        delimiter: ','
+      })
+      const lines = parsedData.data as string[][]
+      if (lines.length == 0) {
+        setError('Archivo vacío')
+        return 
+      }
+      
       const newRecipients: string[] = []
       const newAmounts: string[] = []
 
-      lines.forEach((line) => {
-        const parts = line.split(',')
+      lines.forEach((line, _) => {
 
-        if (parts.length >= 2) {
+        if (line.length >= 2) {
           
-          const address = parts[0].trim()
-          const amount = parts[1].trim()
+          const address = line[0].trim()
+          const amount = line[1].trim()
 
-          // Check everythin ok
           if (ethers.isAddress(address) && amount) {
             newRecipients.push(address)
             newAmounts.push(amount)
           }
         }
       })
+
+      if (newRecipients.length === 0) {
+        setError(`No se encontraron direcciones válidas. Por favor, compruebe el formato.`);
+        return;
+      }
 
       setRecipients(newRecipients)
       setAmounts (newAmounts)
@@ -87,6 +111,20 @@ export const BatchTransfer = () => {
       console.log("Error input area: ", error)
     }
   }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setCsvInput(content);
+      processInputAreaData(content);
+    };
+    reader.readAsText(file);
+  };
+  
 
   const approveToken = async (tokenAddr: string, totalAmount: string) => {
     try {
@@ -146,6 +184,8 @@ export const BatchTransfer = () => {
           BigInt(0)
         )
 
+        // TODO: same here, needs to be inside a 
+        // try catch block
         await writeContract(config, {
           address: BATCH_TRANSFER_ADDRESS,
           abi: BATCH_TRANSFER_ABI,
@@ -205,6 +245,26 @@ export const BatchTransfer = () => {
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cargar archivo CSV
+              </label>
+              <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileUpload}
+              className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100
+            "/>
+            <p className="mt-1 text-sm text-gray-500">
+              Formato CSV: dirección,monto (una por línea)
+              </p>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Direcciones y montos (formato: dirección,monto - uno por línea)
               </label>
               <textarea
@@ -219,7 +279,6 @@ export const BatchTransfer = () => {
               />
           </div>
     
-          {/* Transfer Button */}
           <button
             className="w-full bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-300"
             onClick={handleTransfer}
