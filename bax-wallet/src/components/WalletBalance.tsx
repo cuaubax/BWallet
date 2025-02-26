@@ -2,6 +2,7 @@ import { useAccount, useBalance, useChainId } from 'wagmi'
 import { useEffect, useState } from 'react'
 
 const chainToExplorerUrl: { [chainId: number]: string } = {
+  137: "https://polygonscan.com/address/{address}",
   11155111: "https://sepolia.etherscan.io/address/{address}",
   11155420: "https://sepolia.optimistic.etherscan.io/address/{address}",
   421614: "https://sepolia.arbiscan.io/address/{address}",
