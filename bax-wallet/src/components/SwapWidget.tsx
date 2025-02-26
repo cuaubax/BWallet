@@ -1,50 +1,155 @@
 import { useEffect, useState, useRef } from 'react'
-import { createCowSwapWidget, CowSwapWidgetParams, TradeType } from '@cowprotocol/widget-lib'
+import axios from 'axios'
+
+interface Token {
+  symbol: string
+  address: string
+  decimals: number
+}
 
 export const SwapWidget = () => {
   const [mounted, setMounted] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [amount, setAmount] = useState('')
+  const [quoteAmount, setQuoteAmount] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+
+  // All of this should be moved to different files
+  const API_KEY_0x = ''
+  const URL_0x = 'https://api.0x.org'
+
+  // Polygon mainnet
+  const CHAIN_ID = 137
+
+  const USDC: Token = {
+    symbol: 'USDC',
+    address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', 
+    decimals: 6
+  }
+  
+  const ETH: Token = {
+    symbol: 'ETH',
+    address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    decimals: 18
+  }
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (containerRef.current && mounted && window.ethereum) {
-      const params: CowSwapWidgetParams = {
-        appCode: "BaxB-Wallet",
-        width: "100%",
-        height: "500px",
-        chainId: 11155111,
-        tokenLists: [
-          "https://files.cow.fi/tokens/CoinGecko.json",
-          "https://files.cow.fi/tokens/CowSwap.json"
-        ],
-        tradeType: TradeType.SWAP,
-        standaloneMode: true, // could we use the already existing wallet connection? 
-        theme: "light",
+  const getQuote = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      setQuoteAmount('')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const sellAmount = (parseFloat(amount) * (10 ** USDC.decimals)).toString()
+
+      const params = {
+        sellToken: USDC.address,
+        buyToken: ETH.address,
+        sellAmount: sellAmount,
+        chainId: CHAIN_ID,
       }
 
-      createCowSwapWidget(containerRef.current, { 
-        params, 
-        provider: window.ethereum 
+      const response = await axios.get(`${URL_0x}/swap/permit2/price`, { 
+        params,
+        headers: {
+          '0x-api-key': API_KEY_0x,
+          '0x-version': 'v2'
+        }
       })
+
+      const quote = response.data
+
+      const buyAmount = ((parseInt(quote.buyAmount)) / (10 ** ETH.decimals)).toString()
+
+      setQuoteAmount(buyAmount)
+      setLoading(false)
+    } catch (error) {
+      console.error('Error geting qoute:', error)
+      setError('Failed to get Price')
+      setQuoteAmount('')
+      setLoading(false)
     }
-  }, [mounted])
+  }
+
+  // Wait unitl user is done typing
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      getQuote()
+    }, 500)
+    
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [amount])
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setAmount(value)
+  }
 
   if (!mounted) return null
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Swap Tokens</h2>
-      <div 
-        ref={containerRef} 
-        style={{
-          height: '500px',
-          position: 'relative',
-          zIndex: 10
-        }}
-      />
+      <h2 className="text-xl font-semibold mb-4">Convert USDC to ETH</h2>
+      
+      {/* USDC Input */}
+      <div className="mb-4 border rounded-lg p-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-gray-600">From</span>
+          <span className="font-medium">{USDC.symbol}</span>
+        </div>
+        <input
+          type="number"
+          placeholder="0.0"
+          className="w-full text-2xl outline-none"
+          value={amount}
+          onChange={handleAmountChange}
+        />
+      </div>
+      
+      {/* Arrow */}
+      <div className="flex justify-center mb-4">
+        <div className="bg-gray-100 p-2 rounded-full">⇅</div>
+      </div>
+      
+      {/* ETH Output */}
+      <div className="mb-4 border rounded-lg p-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-gray-600">To</span>
+          <span className="font-medium">{ETH.symbol}</span>
+        </div>
+        <div className="w-full text-2xl">
+          {loading ? 'Loading...' : quoteAmount ? quoteAmount : '0.0'}
+        </div>
+      </div>
+      
+      {/* Error Display */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+      
+      {/* Exchange Rate (when we have a quote) */}
+      {quoteAmount && amount && (
+        <div className="mb-4 p-3 bg-gray-50 rounded">
+          <div className="flex justify-between">
+            <span>Rate</span>
+            <span>
+              1 {USDC.symbol} = {(parseFloat(quoteAmount) / parseFloat(amount)).toFixed(6)} {ETH.symbol}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
