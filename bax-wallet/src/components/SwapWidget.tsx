@@ -15,9 +15,7 @@ export const SwapWidget = () => {
   const [error, setError] = useState<string | null>(null)
 
 
-  // All of this should be moved to different files
-  const API_KEY_0x = ''
-  const URL_0x = 'https://api.0x.org'
+  // All of the following const should be moved to different files
 
   // Polygon mainnet
   const CHAIN_ID = 137
@@ -57,12 +55,8 @@ export const SwapWidget = () => {
         chainId: CHAIN_ID,
       }
 
-      const response = await axios.get(`${URL_0x}/swap/permit2/price`, { 
+      const response = await axios.get(`/api/swapproxy`, { 
         params,
-        headers: {
-          '0x-api-key': API_KEY_0x,
-          '0x-version': 'v2'
-        }
       })
 
       const quote = response.data
@@ -79,7 +73,7 @@ export const SwapWidget = () => {
     }
   }
 
-  // Wait unitl user is done typing
+  // Waits unitl user is done typing
   useEffect(() => {
     const handler = setTimeout(() => {
       getQuote()
