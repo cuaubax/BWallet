@@ -13,6 +13,8 @@ export const SwapWidget = () => {
   const [quoteAmount, setQuoteAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fromToken, setFromToken] = useState<Token | null>(null)
+  const [toToken, setToToken] = useState<Token | null>(null)
 
 
   // All of the following const should be moved to different files
@@ -20,24 +22,34 @@ export const SwapWidget = () => {
   // Polygon mainnet
   const CHAIN_ID = 137
 
-  const USDC: Token = {
-    symbol: 'USDC',
-    address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', 
-    decimals: 6
-  }
-  
-  const ETH: Token = {
-    symbol: 'ETH',
-    address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-    decimals: 18
-  }
+  const tokensList: Token[] = [
+    {
+      symbol: 'USDC',
+      address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', 
+      decimals: 6
+    },
+
+    {
+      symbol: 'POL',
+      address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      decimals: 18
+    },
+
+    // Eventually change this one for MEXAS
+    {
+      symbol: 'WETH',
+      address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+      decimals: 18
+    }
+
+  ]
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   const getQuote = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
+    if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
       setQuoteAmount('')
       return
     }
@@ -46,11 +58,11 @@ export const SwapWidget = () => {
       setLoading(true)
       setError(null)
 
-      const sellAmount = (parseFloat(amount) * (10 ** USDC.decimals)).toString()
+      const sellAmount = (parseFloat(amount) * (10 ** fromToken.decimals)).toString()
 
       const params = {
-        sellToken: USDC.address,
-        buyToken: ETH.address,
+        sellToken: fromToken.address,
+        buyToken: toToken.address,
         sellAmount: sellAmount,
         chainId: CHAIN_ID,
       }
@@ -61,7 +73,7 @@ export const SwapWidget = () => {
 
       const quote = response.data
 
-      const buyAmount = ((parseInt(quote.buyAmount)) / (10 ** ETH.decimals)).toString()
+      const buyAmount = ((parseInt(quote.buyAmount)) / (10 ** toToken.decimals)).toString()
 
       setQuoteAmount(buyAmount)
       setLoading(false)
@@ -73,7 +85,7 @@ export const SwapWidget = () => {
     }
   }
 
-  // Waits unitl user is done typing
+  // Waits unitl user is done typing or making changes
   useEffect(() => {
     const handler = setTimeout(() => {
       getQuote()
@@ -82,24 +94,66 @@ export const SwapWidget = () => {
     return () => {
       clearTimeout(handler)
     }
-  }, [amount])
+  }, [amount, toToken, fromToken])
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setAmount(value)
   }
 
+  const handleFromTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedToken = tokensList.find(token => token.address === e.target.value)
+    if (selectedToken) {
+      setFromToken(selectedToken)
+      
+      // If the user selects the same token for both, swap the to token
+      if (toToken && selectedToken.address === toToken.address) {
+        setToToken(fromToken)
+      }
+    }
+  }
+
+  const handleToTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedToken = tokensList.find(token => token.address === e.target.value)
+    if (selectedToken) {
+      setToToken(selectedToken)
+      
+      // If the user selects the same token for both, swap the from token
+      if (fromToken && selectedToken.address === fromToken.address) {
+        setFromToken(toToken)
+      }
+    }
+  }
+
+  const handleSwapTokens = () => {
+    // Swap the from and to tokens
+    const tempToken = fromToken
+    setFromToken(toToken)
+    setToToken(tempToken)
+    setQuoteAmount('')
+  }
+
   if (!mounted) return null
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Convert USDC to ETH</h2>
+      <h2 className="text-xl font-semibold mb-4">Token Swap</h2>
       
-      {/* USDC Input */}
+      {/* From Token Input */}
       <div className="mb-4 border rounded-lg p-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-gray-600">From</span>
-          <span className="font-medium">{USDC.symbol}</span>
+          <select 
+            className="bg-gray-100 rounded p-1"
+            value={fromToken?.address || ''}
+            onChange={handleFromTokenChange}
+          >
+            {tokensList.map((token) => (
+              <option key={`from-${token.address}`} value={token.address}>
+                {token.symbol}
+              </option>
+            ))}
+          </select>
         </div>
         <input
           type="number"
@@ -110,16 +164,31 @@ export const SwapWidget = () => {
         />
       </div>
       
-      {/* Arrow */}
+      {/* Swap Direction Button */}
       <div className="flex justify-center mb-4">
-        <div className="bg-gray-100 p-2 rounded-full">⇅</div>
+        <button 
+          className="bg-gray-100 p-2 rounded-full hover:bg-gray-200"
+          onClick={handleSwapTokens}
+        >
+          ⇅
+        </button>
       </div>
       
-      {/* ETH Output */}
+      {/* To Token Output */}
       <div className="mb-4 border rounded-lg p-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-gray-600">To</span>
-          <span className="font-medium">{ETH.symbol}</span>
+          <select 
+            className="bg-gray-100 rounded p-1"
+            value={toToken?.address || ''}
+            onChange={handleToTokenChange}
+          >
+            {tokensList.map((token) => (
+              <option key={`to-${token.address}`} value={token.address}>
+                {token.symbol}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="w-full text-2xl">
           {loading ? 'Loading...' : quoteAmount ? quoteAmount : '0.0'}
@@ -134,12 +203,12 @@ export const SwapWidget = () => {
       )}
       
       {/* Exchange Rate (when we have a quote) */}
-      {quoteAmount && amount && (
+      {quoteAmount && amount && fromToken && toToken && (
         <div className="mb-4 p-3 bg-gray-50 rounded">
           <div className="flex justify-between">
             <span>Rate</span>
             <span>
-              1 {USDC.symbol} = {(parseFloat(quoteAmount) / parseFloat(amount)).toFixed(6)} {ETH.symbol}
+              1 {fromToken.symbol} = {(parseFloat(quoteAmount) / parseFloat(amount)).toFixed(6)} {toToken.symbol}
             </span>
           </div>
         </div>
