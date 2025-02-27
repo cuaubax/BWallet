@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
+import { useWalletClient, useAccount } from 'wagmi'
 
 interface Token {
   symbol: string
@@ -15,6 +16,9 @@ export const SwapWidget = () => {
   const [error, setError] = useState<string | null>(null)
   const [fromToken, setFromToken] = useState<Token | null>(null)
   const [toToken, setToToken] = useState<Token | null>(null)
+  const [isSwapping, setIsSwapping] = useState(false)
+  const { data: walletClient } = useWalletClient()
+  const { address } = useAccount()
 
 
   // All of the following const should be moved to different files
@@ -73,7 +77,7 @@ export const SwapWidget = () => {
         chainId: CHAIN_ID,
       }
 
-      const response = await axios.get(`/api/swapproxy`, { 
+      const response = await axios.get(`/api/priceproxy`, { 
         params,
       })
 
@@ -143,6 +147,72 @@ export const SwapWidget = () => {
     setQuoteAmount('')
   }
 
+  const performSwap = async () => {
+    if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
+      setError('Please enter a valid amount and select tokens.')
+      return
+    }
+    if (!walletClient) {
+      setError('Connect your wallet first.')
+      return
+    }
+    
+    try {
+      setIsSwapping(true)
+      setError(null)
+      const sellAmount = (parseFloat(amount) * (10 ** fromToken.decimals)).toString()
+      const params = {
+        sellToken: fromToken.address,
+        buyToken: toToken.address,
+        sellAmount: sellAmount,
+        taker: address,
+        chainId: CHAIN_ID,
+      }
+      
+      // Call the 0x API endpoint for performing the swap
+      const response = await axios.get(`/api/swapproxy`, { params })
+      const quote = response.data
+
+      let txData = quote.transaction.data
+
+      // If the sell token is not native (using our placeholder) and allowance is insufficient, sign permit
+      if (
+        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' &&
+        parseFloat(quote.issues.allowance.actual) < parseFloat(sellAmount)
+      ) {
+        const eip712 = quote.permit2.eip712
+        // Sign the permit using the wallet client's signTypedData method
+        const signature = await walletClient.signTypedData({
+          domain: eip712.domain,
+          types: eip712.types,
+          message: eip712.message,
+          primaryType: eip712.primaryType,
+        })
+        // Append the signature (without the 0x prefix) to the transaction data
+        txData = txData + signature.slice(2)
+      }
+
+      // Prepare transaction object. If the sell token is native, include the value.
+      const tx = {
+        to: quote.transaction.to,
+        data: txData,
+        gas: quote.transaction.gas,
+        gasPrice: quote.transaction.gasPrice,
+        value: quote.transaction.value, // value will be "0" for ERC20 swaps and non-zero for native swaps
+      }
+
+      // Send the transaction via the wallet client
+      const txResponse = await walletClient.sendTransaction(tx)
+      console.log('Transaction sent:', txResponse)
+    } catch (err) {
+      console.error('Swap failed:', err)
+      setError('Swap transaction failed')
+    } finally {
+      setIsSwapping(false)
+    }
+  }
+
+
   if (!mounted) return null
 
   return (
@@ -178,7 +248,13 @@ export const SwapWidget = () => {
       <div className="flex justify-center mb-4">
         <button 
           className="bg-gray-100 p-2 rounded-full hover:bg-gray-200"
-          onClick={handleSwapTokens}
+          onClick={() => {
+            // Swap the tokens
+            const temp = fromToken
+            setFromToken(toToken)
+            setToToken(temp)
+            setQuoteAmount('')
+          }}
         >
           ⇅
         </button>
@@ -211,18 +287,15 @@ export const SwapWidget = () => {
           {error}
         </div>
       )}
-      
-      {/* Exchange Rate (when we have a quote) */}
-      {quoteAmount && amount && fromToken && toToken && (
-        <div className="mb-4 p-3 bg-gray-50 rounded">
-          <div className="flex justify-between">
-            <span>Rate</span>
-            <span>
-              1 {fromToken.symbol} = {(parseFloat(quoteAmount) / parseFloat(amount)).toFixed(6)} {toToken.symbol}
-            </span>
-          </div>
-        </div>
-      )}
+
+      {/* Swap Action Button */}
+      <button
+        className="w-full bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-300"
+        onClick={performSwap}
+        disabled={isSwapping}
+      >
+        {isSwapping ? 'Processing Swap...' : 'Perform Swap'}
+      </button>
     </div>
   )
 }

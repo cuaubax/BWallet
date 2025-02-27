@@ -14,7 +14,7 @@ export default async function handler(
   }
 
   try {
-    const response = await axios.get(`${URL_0x}/swap/permit2/quote`, {
+    const response = await axios.get(`${URL_0x}/swap/permit2/price`, {
       params: req.query,
       headers: {
         '0x-api-key': API_KEY_0x,
