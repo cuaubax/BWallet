@@ -51,6 +51,12 @@ export const SwapWidget = () => {
   const getQuote = async () => {
     if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
       setQuoteAmount('')
+
+    const usdcToken = tokensList.find(token => token.symbol === 'USDC')
+    const polToken = tokensList.find(token => token.symbol === 'POL')
+    
+    setFromToken(usdcToken || null)
+    setToToken(polToken || null)
       return
     }
 
@@ -94,7 +100,7 @@ export const SwapWidget = () => {
     return () => {
       clearTimeout(handler)
     }
-  }, [amount, toToken, fromToken])
+  }, [fromToken?.address, toToken?.address, amount])
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -102,28 +108,32 @@ export const SwapWidget = () => {
   }
 
   const handleFromTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedToken = tokensList.find(token => token.address === e.target.value)
-    if (selectedToken) {
-      setFromToken(selectedToken)
-      
-      // If the user selects the same token for both, swap the to token
-      if (toToken && selectedToken.address === toToken.address) {
-        setToToken(fromToken)
-      }
-    }
+    setFromToken((prevFromToken) => {
+      const selectedToken = tokensList.find(token => token.address === e.target.value)
+      // should not happend, but better to have it
+      if (!selectedToken) return prevFromToken
+  
+      // Swap tokens if necessary
+      return selectedToken.address === toToken?.address ? toToken : selectedToken
+    })
+  
+    setToToken((prevToToken) => 
+      prevToToken?.address === e.target.value ? fromToken : prevToToken
+    )
   }
-
+  
   const handleToTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedToken = tokensList.find(token => token.address === e.target.value)
-    if (selectedToken) {
-      setToToken(selectedToken)
-      
-      // If the user selects the same token for both, swap the from token
-      if (fromToken && selectedToken.address === fromToken.address) {
-        setFromToken(toToken)
-      }
-    }
-  }
+    setToToken((prevToToken) => {
+      const selectedToken = tokensList.find(token => token.address === e.target.value)
+      if (!selectedToken) return prevToToken
+  
+      return selectedToken.address === fromToken?.address ? fromToken : selectedToken
+    })
+  
+    setFromToken((prevFromToken) => 
+      prevFromToken?.address === e.target.value ? toToken : prevFromToken
+    )
+  }  
 
   const handleSwapTokens = () => {
     // Swap the from and to tokens
