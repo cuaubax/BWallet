@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import axios from 'axios'
 
-const API_KEY_0x = ''
+const API_KEY_0x = process.env.API_KEY_0x
 const URL_0x = 'https://api.0x.org'
 
 export default async function handler(
