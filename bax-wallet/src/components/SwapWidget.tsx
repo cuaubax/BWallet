@@ -1,7 +1,18 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import axios from 'axios'
-import { useWalletClient, useAccount } from 'wagmi'
-import { concat, numberToHex, size } from 'viem'
+import { 
+  useWalletClient, 
+  useAccount, 
+  useReadContract, 
+  useWriteContract, 
+  useWaitForTransactionReceipt,
+  useSimulateContract
+} from 'wagmi'
+import { concat, numberToHex, size, Address, erc20Abi } from 'viem'
+
+// Constants
+const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3' // Permit2 contract address
+const MAX_ALLOWANCE = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') // Max uint256
 
 interface Token {
   symbol: string
@@ -18,11 +29,11 @@ export const SwapWidget = () => {
   const [fromToken, setFromToken] = useState<Token | null>(null)
   const [toToken, setToToken] = useState<Token | null>(null)
   const [isSwapping, setIsSwapping] = useState(false)
+  const [quote, setQuote] = useState<any | null>(null)
+  const [needsApproval, setNeedsApproval] = useState(false)
+  
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
-
-
-  // All of the following const should be moved to different files
 
   // Polygon mainnet
   const CHAIN_ID = 137
@@ -33,134 +44,28 @@ export const SwapWidget = () => {
       address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', 
       decimals: 6
     },
-
     {
       symbol: 'POL',
       address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       decimals: 18
     },
-
-    // Eventually change this one for MEXAS
     {
       symbol: 'WETH',
       address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
       decimals: 18
     }
-
   ]
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const getQuote = async () => {
-    if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
-      setQuoteAmount('')
-
-    const usdcToken = tokensList.find(token => token.symbol === 'USDC')
-    const polToken = tokensList.find(token => token.symbol === 'POL')
-    
-    setFromToken(usdcToken || null)
-    setToToken(polToken || null)
-      return
-    }
-
-    try {
-      setLoading(true)
-      setError(null)
-
-      const sellAmount = (parseFloat(amount) * (10 ** fromToken.decimals)).toString()
-
-      const params = {
-        sellToken: fromToken.address,
-        buyToken: toToken.address,
-        sellAmount: sellAmount,
-        chainId: CHAIN_ID,
-      }
-
-      const response = await axios.get(`/api/priceproxy`, { 
-        params,
-      })
-
-      const quote = response.data
-
-      const buyAmount = ((parseInt(quote.buyAmount)) / (10 ** toToken.decimals)).toString()
-
-      setQuoteAmount(buyAmount)
-      setLoading(false)
-    } catch (error) {
-      console.error('Error geting qoute:', error)
-      setError('Failed to get Price')
-      setQuoteAmount('')
-      setLoading(false)
-    }
-  }
-
-  // Waits unitl user is done typing or making changes
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      getQuote()
-    }, 500)
-    
-    return () => {
-      clearTimeout(handler)
-    }
-  }, [fromToken?.address, toToken?.address, amount])
-
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setAmount(value)
-  }
-
-  const handleFromTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFromToken((prevFromToken) => {
-      const selectedToken = tokensList.find(token => token.address === e.target.value)
-      // should not happend, but better to have it
-      if (!selectedToken) return prevFromToken
-  
-      // Swap tokens if necessary
-      return selectedToken.address === toToken?.address ? toToken : selectedToken
-    })
-  
-    setToToken((prevToToken) => 
-      prevToToken?.address === e.target.value ? fromToken : prevToToken
-    )
-  }
-  
-  const handleToTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setToToken((prevToToken) => {
-      const selectedToken = tokensList.find(token => token.address === e.target.value)
-      if (!selectedToken) return prevToToken
-  
-      return selectedToken.address === fromToken?.address ? fromToken : selectedToken
-    })
-  
-    setFromToken((prevFromToken) => 
-      prevFromToken?.address === e.target.value ? toToken : prevFromToken
-    )
-  }  
-
-  const handleSwapTokens = () => {
-    // Swap the from and to tokens
-    const tempToken = fromToken
-    setFromToken(toToken)
-    setToToken(tempToken)
-    setQuoteAmount('')
-  }
-
-  const performSwap = async () => {
-    if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
-      setError('Please enter a valid amount and select tokens.')
-      return
-    }
-    if (!walletClient) {
-      setError('Connect your wallet first.')
+  // Define executeSwap as a useCallback to avoid dependency issues
+  const executeSwap = useCallback(async () => {
+    if (!walletClient || !address || !fromToken || !toToken || !amount) {
+      setError('Missing required data for swap')
+      setIsSwapping(false)
       return
     }
     
     try {
-      setIsSwapping(true)
-      setError(null)
+      // Get a fresh quote for the swap
       const sellAmount = (parseFloat(amount) * (10 ** fromToken.decimals)).toString()
       const params = {
         sellToken: fromToken.address,
@@ -172,17 +77,13 @@ export const SwapWidget = () => {
       
       // Call the 0x API endpoint for performing the swap
       const response = await axios.get(`/api/swapproxy`, { params })
-      const quote = response.data
+      const swapQuote = response.data
 
-      console.log(quote)
+      let txData = swapQuote.transaction.data
 
-      let txData = quote.transaction.data
-
-      // If the sell token is not native (using our placeholder) and allowance is insufficient, sign permit
-      if (
-        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
-      ) {
-        const eip712 = quote.permit2.eip712
+      // If the sell token is not native, sign permit
+      if (fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
+        const eip712 = swapQuote.permit2.eip712
         // Sign the permit using the wallet client's signTypedData method
         const signature = await walletClient.signTypedData({
           domain: eip712.domain,
@@ -197,26 +98,239 @@ export const SwapWidget = () => {
         txData = concat([txData, signatureLengthInHex, signature]);
       }
 
-      // Prepare transaction object. If the sell token is native, include the value.
+      // Prepare transaction object
       const tx = {
-        to: quote.transaction.to,
+        to: swapQuote.transaction.to,
         data: txData,
-        gas: quote.transaction.gas,
-        gasPrice: quote.transaction.gasPrice,
-        value: quote.transaction.value, // value will be "0" for ERC20 swaps and non-zero for native swaps
+        gas: swapQuote.transaction.gas,
+        gasPrice: swapQuote.transaction.gasPrice,
+        value: swapQuote.transaction.value,
       }
 
       // Send the transaction via the wallet client
       const txResponse = await walletClient.sendTransaction(tx)
       console.log('Transaction sent:', txResponse)
-    } catch (err) {
-      console.error('Swap failed:', err)
+      
+      // Reset form after successful swap
+      setTimeout(() => {
+        setAmount('')
+        setQuoteAmount('')
+        setQuote(null)
+        setNeedsApproval(false)
+        refetchAllowance()
+      }, 3000)
+    } catch (error) {
+      console.error('Swap failed:', error)
       setError('Swap transaction failed')
     } finally {
       setIsSwapping(false)
     }
+  }, [walletClient, address, fromToken, toToken, amount, CHAIN_ID]);
+
+  // 1. Check token allowance for Permit2
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: fromToken?.address as Address,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [address as Address, PERMIT2_ADDRESS],
+  })
+
+  // 2. Simulate approve transaction
+  const { data: simulateData } = useSimulateContract({
+    address: fromToken?.address as Address,
+    abi: erc20Abi,
+    functionName: "approve",
+    args: [PERMIT2_ADDRESS, MAX_ALLOWANCE], 
+  })
+
+  // 3. Execute the approve transaction
+  const { 
+    writeContractAsync: approveTokens,
+    data: approvalTxHash,
+    error: approvalError,
+    isPending: isApproving
+  } = useWriteContract()
+
+  // 4. Wait for approval transaction to complete
+  const { 
+    data: approvalReceipt,
+    isLoading: isWaitingForApproval 
+  } = useWaitForTransactionReceipt({
+    hash: approvalTxHash
+  })
+
+  // When approval transaction completes, continue with the swap
+  useEffect(() => {
+    if (approvalReceipt && needsApproval) {
+      refetchAllowance();
+      executeSwap();
+    }
+  }, [approvalReceipt, needsApproval, executeSwap, refetchAllowance]);
+
+  // Check if allowance is sufficient whenever it changes
+  useEffect(() => {
+    if (
+      fromToken && 
+      fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' &&
+      allowance !== undefined && 
+      amount &&
+      parseFloat(amount) > 0
+    ) {
+      const requiredAmount = BigInt(Math.floor(parseFloat(amount) * (10 ** fromToken.decimals)))
+      const currentAllowance = allowance ? BigInt(allowance.toString()) : BigInt(0)
+      const needsTokenApproval = currentAllowance < requiredAmount
+      setNeedsApproval(needsTokenApproval)
+    } else {
+      setNeedsApproval(false)
+    }
+  }, [allowance, amount, fromToken]);
+
+  useEffect(() => {
+    // When token changes, reset approval status and refetch allowance
+    if (fromToken && 
+        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
+      refetchAllowance()
+    }
+  }, [fromToken, refetchAllowance])  
+
+  useEffect(() => {
+    setMounted(true)
+    const usdcToken = tokensList.find(token => token.symbol === 'USDC')
+    const polToken = tokensList.find(token => token.symbol === 'POL')
+    
+    setFromToken(usdcToken || null)
+    setToToken(polToken || null)
+  }, []);
+
+  const getQuote = async () => {
+    if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
+      setQuoteAmount('')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      const sellAmount = (parseFloat(amount) * (10 ** fromToken.decimals)).toString()
+
+      const params = {
+        sellToken: fromToken.address,
+        buyToken: toToken.address,
+        sellAmount: sellAmount,
+        chainId: CHAIN_ID,
+        takerAddress: address
+      }
+
+      const response = await axios.get(`/api/priceproxy`, { params })
+      const quoteData = response.data
+
+      setQuote(quoteData)
+      const buyAmount = ((parseInt(quoteData.buyAmount)) / (10 ** toToken.decimals)).toString()
+      setQuoteAmount(buyAmount)
+      
+    } catch (error) {
+      console.error('Error getting quote:', error)
+      setError('Failed to get Price')
+      setQuoteAmount('')
+      setQuote(null)
+    } finally {
+      setLoading(false)
+    }
   }
 
+  // Waits until user is done typing or making changes
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      getQuote()
+    }, 500)
+    
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [fromToken?.address, toToken?.address, amount, address]);
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setAmount(value)
+  }
+
+  const handleFromTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFromToken((prevFromToken) => {
+      const selectedToken = tokensList.find(token => token.address === e.target.value)
+      if (!selectedToken) return prevFromToken
+      return selectedToken.address === toToken?.address ? toToken : selectedToken
+    })
+  
+    setToToken((prevToToken) => 
+      prevToToken?.address === e.target.value ? fromToken : prevToToken
+    )
+  }
+  
+  const handleToTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setToToken((prevToToken) => {
+      const selectedToken = tokensList.find(token => token.address === e.target.value)
+      if (!selectedToken) return prevToToken
+      return selectedToken.address === fromToken?.address ? fromToken : selectedToken
+    })
+  
+    setFromToken((prevFromToken) => 
+      prevFromToken?.address === e.target.value ? toToken : prevFromToken
+    )
+  }  
+
+  const handleSwapTokens = () => {
+    const tempToken = fromToken
+    setFromToken(toToken)
+    setToToken(tempToken)
+    setQuoteAmount('')
+  }
+
+  const handleSwapButtonClick = async () => {
+    console.log("apreto")
+    if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
+      setError('Please enter a valid amount and select tokens.')
+      return
+    }
+    
+    if (!walletClient || !address) {
+      setError('Connect your wallet first.')
+      return
+    }
+    
+    try {
+      setIsSwapping(true)
+      setError(null)
+      
+      // If selling a non-native token that needs approval, handle approval first
+      if (
+        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' && 
+        needsApproval
+      ) {
+        if (!simulateData || !simulateData.request) {
+          throw new Error('Cannot simulate approval transaction')
+        }
+        
+        await approveTokens(simulateData.request)
+        // The rest happens in the useEffect watching approvalReceipt
+      } else {
+        // No approval needed, proceed with swap
+        await executeSwap()
+      }
+    } catch (error) {
+      console.error('Failed to initiate transaction:', error)
+      setError('Failed to initiate transaction')
+      setIsSwapping(false)
+    }
+  }
+
+  // Determine button text based on current state
+  const getButtonText = () => {
+    if (isApproving || isWaitingForApproval) return 'Approving...'
+    if (isSwapping) return 'Processing Swap...'
+    if (needsApproval) return 'Approve & Swap'
+    return 'Perform Swap'
+  }
 
   if (!mounted) return null
 
@@ -232,6 +346,7 @@ export const SwapWidget = () => {
             className="bg-gray-100 rounded p-1"
             value={fromToken?.address || ''}
             onChange={handleFromTokenChange}
+            disabled={isSwapping || isApproving || isWaitingForApproval}
           >
             {tokensList.map((token) => (
               <option key={`from-${token.address}`} value={token.address}>
@@ -246,6 +361,7 @@ export const SwapWidget = () => {
           className="w-full text-2xl outline-none"
           value={amount}
           onChange={handleAmountChange}
+          disabled={isSwapping || isApproving || isWaitingForApproval}
         />
       </div>
       
@@ -253,13 +369,8 @@ export const SwapWidget = () => {
       <div className="flex justify-center mb-4">
         <button 
           className="bg-gray-100 p-2 rounded-full hover:bg-gray-200"
-          onClick={() => {
-            // Swap the tokens
-            const temp = fromToken
-            setFromToken(toToken)
-            setToToken(temp)
-            setQuoteAmount('')
-          }}
+          onClick={handleSwapTokens}
+          disabled={isSwapping || isApproving || isWaitingForApproval}
         >
           ⇅
         </button>
@@ -273,6 +384,7 @@ export const SwapWidget = () => {
             className="bg-gray-100 rounded p-1"
             value={toToken?.address || ''}
             onChange={handleToTokenChange}
+            disabled={isSwapping || isApproving || isWaitingForApproval}
           >
             {tokensList.map((token) => (
               <option key={`to-${token.address}`} value={token.address}>
@@ -286,6 +398,13 @@ export const SwapWidget = () => {
         </div>
       </div>
       
+      {/* Approval Status Display */}
+      {needsApproval && fromToken && fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' && (
+        <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded">
+          Approval needed for {fromToken.symbol}. The swap will execute after approval.
+        </div>
+      )}
+      
       {/* Error Display */}
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
@@ -296,11 +415,23 @@ export const SwapWidget = () => {
       {/* Swap Action Button */}
       <button
         className="w-full bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-300"
-        onClick={performSwap}
-        disabled={isSwapping}
+        onClick={handleSwapButtonClick}
+        disabled={isSwapping || isApproving || isWaitingForApproval || loading || !amount || !quoteAmount}
       >
-        {isSwapping ? 'Processing Swap...' : 'Perform Swap'}
+        {getButtonText()}
       </button>
+      
+      {/* Transaction Status */}
+      {(isApproving || isWaitingForApproval) && (
+        <p className="text-sm text-center mt-2 text-gray-600">
+          Please confirm the approval transaction in your wallet...
+        </p>
+      )}
+      {isSwapping && (
+        <p className="text-sm text-center mt-2 text-gray-600">
+          Please confirm the swap transaction in your wallet...
+        </p>
+      )}
     </div>
   )
 }
