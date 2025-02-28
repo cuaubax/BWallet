@@ -31,6 +31,7 @@ export const SwapWidget = () => {
   const [isSwapping, setIsSwapping] = useState(false)
   const [quote, setQuote] = useState<any | null>(null)
   const [needsApproval, setNeedsApproval] = useState(false)
+  const [waitingForApproval, setWaitingForApproval] = useState(false)
   
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
@@ -113,20 +114,19 @@ export const SwapWidget = () => {
       
       // Reset form after successful swap
       setTimeout(() => {
-        setAmount('')
-        setQuoteAmount('')
-        setQuote(null)
-        setNeedsApproval(false)
-        refetchAllowance()
+        resetSwapState()
       }, 3000)
     } catch (error) {
       console.error('Swap failed:', error)
       setError('Swap transaction failed')
+      setIsSwapping(false)
     } finally {
       setIsSwapping(false)
     }
   }, [walletClient, address, fromToken, toToken, amount, CHAIN_ID]);
 
+
+  // Following steps are almost a copy from the 0x docs
   // 1. Check token allowance for Permit2
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: fromToken?.address as Address,
@@ -161,11 +161,20 @@ export const SwapWidget = () => {
 
   // When approval transaction completes, continue with the swap
   useEffect(() => {
-    if (approvalReceipt && needsApproval) {
-      refetchAllowance();
-      executeSwap();
+
+    console.log("Approval receipt effect check:", {
+      hasApprovalReceipt: !!approvalReceipt,
+      needsApproval,
+      waitingForApproval
+    });
+
+    if (approvalReceipt && needsApproval && waitingForApproval) {
+      console.log("culpable1")
+      setWaitingForApproval(false)
+      refetchAllowance()
+      executeSwap()
     }
-  }, [approvalReceipt, needsApproval, executeSwap, refetchAllowance]);
+  }, [approvalReceipt, waitingForApproval, executeSwap, refetchAllowance]);
 
   // Check if allowance is sufficient whenever it changes
   useEffect(() => {
@@ -183,15 +192,7 @@ export const SwapWidget = () => {
     } else {
       setNeedsApproval(false)
     }
-  }, [allowance, amount, fromToken]);
-
-  useEffect(() => {
-    // When token changes, reset approval status and refetch allowance
-    if (fromToken && 
-        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
-      refetchAllowance()
-    }
-  }, [fromToken, refetchAllowance])  
+  }, [allowance, amount, fromToken])
 
   useEffect(() => {
     setMounted(true)
@@ -211,6 +212,11 @@ export const SwapWidget = () => {
     try {
       setLoading(true)
       setError(null)
+
+    if (fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
+      await refetchAllowance();
+    }
+
 
       const sellAmount = (parseFloat(amount) * (10 ** fromToken.decimals)).toString()
 
@@ -286,8 +292,38 @@ export const SwapWidget = () => {
     setQuoteAmount('')
   }
 
+  // Debug stuff
+  useEffect(() => {
+    if (fromToken && amount && parseFloat(amount) > 0) {
+      console.log("Current approval status:", {
+        token: fromToken.symbol,
+        needsApproval,
+        allowance: allowance ? allowance.toString() : '0',
+        requiredAmount: Math.floor(parseFloat(amount) * (10 ** fromToken.decimals)).toString()
+      });
+    }
+  }, [fromToken, amount, allowance, needsApproval]);
+  
+
+  const resetSwapState = useCallback(() => {
+    setAmount('')
+    setQuoteAmount('')
+    setQuote(null)
+    
+    setIsSwapping(false)
+    setNeedsApproval(false)
+    setWaitingForApproval(false)
+    setError(null)
+
+    if (fromToken && 
+        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
+      refetchAllowance()
+    }
+  }, [fromToken, refetchAllowance]);
+  
+
   const handleSwapButtonClick = async () => {
-    console.log("apreto")
+    console.log("aprieto")
     if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
       setError('Please enter a valid amount and select tokens.')
       return
@@ -311,15 +347,19 @@ export const SwapWidget = () => {
           throw new Error('Cannot simulate approval transaction')
         }
         
+        setWaitingForApproval(true)
         await approveTokens(simulateData.request)
+        
         // The rest happens in the useEffect watching approvalReceipt
       } else {
         // No approval needed, proceed with swap
+        console.log("Culpable 2")
         await executeSwap()
       }
     } catch (error) {
       console.error('Failed to initiate transaction:', error)
       setError('Failed to initiate transaction')
+      setWaitingForApproval(false)
       setIsSwapping(false)
     }
   }
@@ -424,12 +464,12 @@ export const SwapWidget = () => {
       {/* Transaction Status */}
       {(isApproving || isWaitingForApproval) && (
         <p className="text-sm text-center mt-2 text-gray-600">
-          Please confirm the approval transaction in your wallet...
+          Pro favor confirma la transacción en tu wallet...
         </p>
       )}
       {isSwapping && (
         <p className="text-sm text-center mt-2 text-gray-600">
-          Please confirm the swap transaction in your wallet...
+          Por favor confirma el swap en tu wallet...
         </p>
       )}
     </div>
