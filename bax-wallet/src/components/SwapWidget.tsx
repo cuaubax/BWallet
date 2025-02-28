@@ -10,9 +10,11 @@ import {
 } from 'wagmi'
 import { concat, numberToHex, size, Address, erc20Abi } from 'viem'
 
-// Constants
-const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3' // Permit2 contract address
-const MAX_ALLOWANCE = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff') // Max uint256
+// Constants move to a better file
+// Permit2 contract address from 0x, same for all chaing
+const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3'
+// Max uint256 for now, might be better to handle approvals with smaller amounts. Good for now
+const MAX_ALLOWANCE = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
 
 interface Token {
   symbol: string
@@ -57,7 +59,8 @@ export const SwapWidget = () => {
     }
   ]
 
-  // Define executeSwap as a useCallback to avoid dependency issues
+  // This executes the swap it self, endpoint is different from the
+  // one that just checks prices. 
   const executeSwap = useCallback(async () => {
     if (!walletClient || !address || !fromToken || !toToken || !amount) {
       setError('Missing required data for swap')
@@ -66,7 +69,6 @@ export const SwapWidget = () => {
     }
     
     try {
-      // Get a fresh quote for the swap
       const sellAmount = (parseFloat(amount) * (10 ** fromToken.decimals)).toString()
       const params = {
         sellToken: fromToken.address,
@@ -76,7 +78,6 @@ export const SwapWidget = () => {
         chainId: CHAIN_ID,
       }
       
-      // Call the 0x API endpoint for performing the swap
       const response = await axios.get(`/api/swapproxy`, { params })
       const swapQuote = response.data
 
@@ -99,7 +100,6 @@ export const SwapWidget = () => {
         txData = concat([txData, signatureLengthInHex, signature]);
       }
 
-      // Prepare transaction object
       const tx = {
         to: swapQuote.transaction.to,
         data: txData,
@@ -108,7 +108,6 @@ export const SwapWidget = () => {
         value: swapQuote.transaction.value,
       }
 
-      // Send the transaction via the wallet client
       const txResponse = await walletClient.sendTransaction(tx)
       console.log('Transaction sent:', txResponse)
       
@@ -126,7 +125,7 @@ export const SwapWidget = () => {
   }, [walletClient, address, fromToken, toToken, amount, CHAIN_ID]);
 
 
-  // Following steps are almost a copy from the 0x docs
+  // Following steps are almost an exact copy from the 0x docs
   // 1. Check token allowance for Permit2
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: fromToken?.address as Address,
@@ -161,15 +160,7 @@ export const SwapWidget = () => {
 
   // When approval transaction completes, continue with the swap
   useEffect(() => {
-
-    console.log("Approval receipt effect check:", {
-      hasApprovalReceipt: !!approvalReceipt,
-      needsApproval,
-      waitingForApproval
-    });
-
     if (approvalReceipt && needsApproval && waitingForApproval) {
-      console.log("culpable1")
       setWaitingForApproval(false)
       refetchAllowance()
       executeSwap()
@@ -292,19 +283,6 @@ export const SwapWidget = () => {
     setQuoteAmount('')
   }
 
-  // Debug stuff
-  useEffect(() => {
-    if (fromToken && amount && parseFloat(amount) > 0) {
-      console.log("Current approval status:", {
-        token: fromToken.symbol,
-        needsApproval,
-        allowance: allowance ? allowance.toString() : '0',
-        requiredAmount: Math.floor(parseFloat(amount) * (10 ** fromToken.decimals)).toString()
-      });
-    }
-  }, [fromToken, amount, allowance, needsApproval]);
-  
-
   const resetSwapState = useCallback(() => {
     setAmount('')
     setQuoteAmount('')
@@ -323,7 +301,6 @@ export const SwapWidget = () => {
   
 
   const handleSwapButtonClick = async () => {
-    console.log("aprieto")
     if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
       setError('Please enter a valid amount and select tokens.')
       return
@@ -349,11 +326,9 @@ export const SwapWidget = () => {
         
         setWaitingForApproval(true)
         await approveTokens(simulateData.request)
-        
-        // The rest happens in the useEffect watching approvalReceipt
+
       } else {
-        // No approval needed, proceed with swap
-        console.log("Culpable 2")
+        
         await executeSwap()
       }
     } catch (error) {
@@ -364,12 +339,11 @@ export const SwapWidget = () => {
     }
   }
 
-  // Determine button text based on current state
   const getButtonText = () => {
-    if (isApproving || isWaitingForApproval) return 'Approving...'
-    if (isSwapping) return 'Processing Swap...'
-    if (needsApproval) return 'Approve & Swap'
-    return 'Perform Swap'
+    if (isApproving || isWaitingForApproval) return 'Aprobando...'
+    if (isSwapping) return 'Procesando Swap...'
+    if (needsApproval) return 'Aprovar & Swappear'
+    return 'Realizar Swap'
   }
 
   if (!mounted) return null
