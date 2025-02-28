@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
 import { useWalletClient, useAccount } from 'wagmi'
+import { concat, numberToHex, size } from 'viem'
 
 interface Token {
   symbol: string
@@ -173,12 +174,13 @@ export const SwapWidget = () => {
       const response = await axios.get(`/api/swapproxy`, { params })
       const quote = response.data
 
+      console.log(quote)
+
       let txData = quote.transaction.data
 
       // If the sell token is not native (using our placeholder) and allowance is insufficient, sign permit
       if (
-        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' &&
-        parseFloat(quote.issues.allowance.actual) < parseFloat(sellAmount)
+        fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
       ) {
         const eip712 = quote.permit2.eip712
         // Sign the permit using the wallet client's signTypedData method
@@ -188,8 +190,11 @@ export const SwapWidget = () => {
           message: eip712.message,
           primaryType: eip712.primaryType,
         })
-        // Append the signature (without the 0x prefix) to the transaction data
-        txData = txData + signature.slice(2)
+        const signatureLengthInHex = numberToHex(size(signature), {
+          signed: false,
+          size: 32,
+        });
+        txData = concat([txData, signatureLengthInHex, signature]);
       }
 
       // Prepare transaction object. If the sell token is native, include the value.
