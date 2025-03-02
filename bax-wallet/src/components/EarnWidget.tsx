@@ -1,6 +1,6 @@
 // src/components/EarnWidget.tsx
 import { useEffect, useState } from 'react'
-import { useAccount, useReadContract, useWriteContract, useSimulateContract } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useSimulateContract, useWaitForTransactionReceipt } from 'wagmi'
 import { ethers } from 'ethers'
 import { Address, erc20Abi, parseUnits } from 'viem'
 
@@ -145,8 +145,63 @@ const USER_RESERVES_DATA_ABI = [{
 }]
 
 const AAVE_POOL_ABI = [
-  'function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external',
-  'function withdraw(address asset, uint256 amount, address to) external returns (uint256)'
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "onBehalfOf",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "referralCode",
+        "type": "uint16"
+      }
+    ],
+    "name": "supply",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "asset",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "withdraw",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
 ]
 
 const MAX_ALLOWANCE = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
@@ -165,6 +220,7 @@ export const AaveComponent = () => {
   const [showModal, setShowModal] = useState(false)
   const [isWithdraw, setIsWithdraw] = useState(false)
   const [amount, setAmount] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [needsApproval, setNeedsApproval] = useState(false)
@@ -175,14 +231,17 @@ export const AaveComponent = () => {
     setIsWithdraw(false)
     setAmount('')
     setShowModal(true)
+    setError(null)
   }
 
   function openWithdrawModal() {
     setIsWithdraw(true)
     setAmount('')
     setShowModal(true)
+    setError(null)
   }
 
+  /*
   function handleConfirm() {
     if (!amount || Number(amount) <= 0) {
       console.log('Please enter a valid amount.')
@@ -199,16 +258,17 @@ export const AaveComponent = () => {
     // Close the modal after confirming
     setShowModal(false)
   }
+    */
 
 
-  const { data, isLoading, error } = useReadContract({
+  const { data, isLoading, error: errorData, isLoading: loadingReserves, refetch: refetchReservesData } = useReadContract({
     address: AAVE_DATA_PROVIDER_ADDRESS,
     abi: UI_POOL_DATA_PROVIDER_ABI,
     functionName: 'getReservesData',
     args: [AAVE_POOL_ADDRESS_PROVIDER]
   })
 
-  const { data: userData, error: userBalanceError } = useReadContract({
+  const { data: userData, error: userBalanceError, isLoading: loadingUserData, refetch: refetchUserReservesData } = useReadContract({
     address: AAVE_DATA_PROVIDER_ADDRESS,
     abi: USER_RESERVES_DATA_ABI,
     functionName: 'getUserReservesData',
@@ -234,9 +294,11 @@ export const AaveComponent = () => {
     functionName: "approve",
     args: [AAVE_POOL_ADDRESS, MAX_ALLOWANCE],
   })
+
+  const { data: approvalTxReceipt, isLoading: isWaitingForApproval } = useWaitForTransactionReceipt({
+    hash: txHash as `0x${string}` | undefined,
+  })
   
-
-
   useEffect(() => {
     if (data && userData) {
       const usdcReserve = data[0].find(
@@ -255,21 +317,7 @@ export const AaveComponent = () => {
     } else if (error) {
       console.error('Error reading reserve data:', error)
     }
-  }, [data, error])
-
-
-  useEffect(() => {
-    if (userData) {
-      console.log(userData)
-
-    } else if (userBalanceError) {
-      console.log(userBalanceError)
-      console.error('Error reading userReserveData:', error)
-    } else {
-      console.log("no")
-    }
-  }, [userData, userBalanceError])
-
+  }, [data, errorData])
 
   // Need to figureout how to deal with this errors
   useEffect(() => {
@@ -317,6 +365,121 @@ export const AaveComponent = () => {
     }
   }, [amount, isWithdraw, allowance])
 
+  useEffect(() => {
+    if (approvalTxReceipt) {
+      if (waitingForApproval) {
+        // Approval completed
+        setWaitingForApproval(false)
+        refetchAllowance().then(() => {
+          // Execute supply after approval
+          proceedWithTransaction(false)
+        })
+      } else {
+        // Supply/withdraw completed
+        setIsProcessing(false)
+        setTxHash(null)
+        
+        // Refresh data
+        refreshData().then(() => {
+          setTimeout(() => {
+            setShowModal(false)
+            resetState()
+          }, 3000)
+        })
+      }
+    }
+  }, [approvalTxReceipt])
+
+  const proceedWithTransaction = async (checkApproval = true) => {
+    if (!amount || parseFloat(amount) <= 0 || !address) {
+      setError('Please enter a valid amount')
+      return
+    }
+    
+    try {
+      setIsProcessing(true)
+      setError(null)
+      
+      const amountInWei = parseUnits(amount, 6)
+      
+      if (isWithdraw) {
+        // Withdraw transaction
+        const hash = await executeTransaction({
+          address: AAVE_POOL_ADDRESS,
+          abi: AAVE_POOL_ABI,
+          functionName: 'withdraw',
+          args: [USDC_ADDRESS, amountInWei, address],
+        })
+        
+        setTxHash(hash)
+      } else {
+        // Supply transaction
+        // Check if approval is needed first
+        if (checkApproval && needsApproval) {
+          if (!simulateApproval || !simulateApproval.request) {
+            throw new Error('Cannot simulate approval transaction')
+          }
+          
+          setWaitingForApproval(true)
+          const hash = await executeTransaction(simulateApproval.request)
+          setTxHash(hash)
+        } else {
+          // Already approved, proceed with supply
+          const hash = await executeTransaction({
+            address: AAVE_POOL_ADDRESS,
+            abi: AAVE_POOL_ABI,
+            functionName: 'supply',
+            args: [USDC_ADDRESS, amountInWei, address, 0],
+          })
+          
+          setTxHash(hash)
+        }
+      }
+    } catch (error) {
+      console.error('Transaction failed:', error)
+      setError('Transaction failed. Please try again.')
+      setIsProcessing(false)
+      setWaitingForApproval(false)
+    }
+  }
+
+  const resetState = () => {
+    setAmount('')
+    setError(null)
+    setIsProcessing(false)
+    setNeedsApproval(false)
+    setWaitingForApproval(false)
+    setTxHash(null)
+  }
+
+  const refreshData = async () => {
+    try {
+      await Promise.all([
+        refetchReservesData(),
+        refetchUserReservesData(),
+        refetchAllowance()
+      ])
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    }
+  }
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAmount(e.target.value)
+    setError(null)
+  }
+
+  const getButtonText = () => {
+    if (waitingForApproval) return 'Approving...'
+    if (isProcessing) return isWithdraw ? 'Withdrawing...' : 'Supplying...'
+    if (needsApproval) return 'Approve & Supply'
+    return isWithdraw ? 'Withdraw' : 'Supply'
+  }
+
+  const handleConfirm = async () => {
+    await proceedWithTransaction(true)
+  }
+
   const profitPlaceholder = '0.00'
   const originalBalance = 4.61
   
@@ -349,21 +512,22 @@ export const AaveComponent = () => {
               </div>
             </td>
 
-            {/* Original Balance (placeholder) */}
+            {/* Original Balance */}
             <td className="py-2">{originalBalance.toFixed(2)}</td>
 
-            {/* Position Value w/ green profit if > 0 */}
+            {/* Position Value */}
             <td className="py-2">
-              {userPosition}
-              <span className="text-green-600 ml-1">
-                  (+{profitPlaceholder})
-              </span>
-              
+              {loadingUserData ? "Loading..." : userPosition}
+              {userPosition && parseFloat(userPosition) > 0 && (
+                <span className="text-green-600 ml-1">
+                  (+{(parseFloat(userPosition) - originalBalance).toFixed(2)})
+                </span>
+              )}
             </td>
 
             {/* APY column */}
             <td className="py-2">
-              {apy ? `${apy}%` : 'Loading...'}
+              {loadingReserves ? "Loading..." : apy ? `${apy}%` : "0.00%"}
             </td>
 
             {/* Buttons column */}
@@ -377,6 +541,7 @@ export const AaveComponent = () => {
               <button
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                 onClick={openWithdrawModal}
+                disabled={!userPosition || parseFloat(userPosition) <= 0}
               >
                 Withdraw
               </button>
@@ -392,6 +557,8 @@ export const AaveComponent = () => {
             <h2 className="text-lg font-semibold mb-4">
               {isWithdraw ? 'Withdraw USDC' : 'Supply USDC'}
             </h2>
+            
+            {/* Amount input */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Amount
@@ -399,25 +566,96 @@ export const AaveComponent = () => {
               <input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={handleAmountChange}
                 className="w-full border border-gray-300 rounded px-3 py-2"
                 placeholder="0.0"
+                disabled={isProcessing || waitingForApproval}
               />
+              {isWithdraw && userPosition && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Available: {userPosition} USDC
+                </div>
+              )}
+              {!isWithdraw && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Balance: {originalBalance.toFixed(2)} USDC
+                </div>
+              )}
             </div>
+            
+            {/* Approval notice */}
+            {needsApproval && !isWithdraw && (
+              <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded text-sm">
+                Approval needed for USDC. The supply will execute after approval.
+              </div>
+            )}
+            
+            {/* Error message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
+                {error}
+              </div>
+            )}
+            
+            {/* Action buttons */}
             <div className="flex justify-end">
               <button
                 className="mr-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false)
+                  resetState()
+                }}
+                disabled={isProcessing || waitingForApproval}
               >
                 Cancel
               </button>
+              
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                onClick={handleConfirm}
-              >
-                Confirm
-              </button>
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              onClick={handleConfirm}
+              disabled={
+                !amount || 
+                parseFloat(amount) <= 0 || 
+                isProcessing || 
+                waitingForApproval ||
+                (isWithdraw && !!userPosition && parseFloat(amount) > parseFloat(userPosition))
+                }>
+                  {getButtonText()}
+                  </button>
             </div>
+            
+            {/* Transaction status */}
+            {(isProcessing || waitingForApproval) && (
+              <div className="mt-4 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">
+                  {waitingForApproval 
+                    ? "Please confirm approval in your wallet..." 
+                    : isWithdraw 
+                      ? "Please confirm withdrawal in your wallet..."
+                      : "Please confirm supply in your wallet..."}
+                </p>
+                
+                {txHash && (
+                  <a 
+                    href={`https://polygonscan.com/tx/${txHash}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline text-sm mt-2 inline-block"
+                  >
+                    View on PolygonScan
+                  </a>
+                )}
+              </div>
+            )}
+            
+            {/* Success message */}
+            {approvalTxReceipt && !waitingForApproval && (
+              <div className="mt-4 text-center">
+                <div className="text-green-500 text-3xl mb-2">✓</div>
+                <p className="text-green-600 font-medium">Transaction successful!</p>
+              </div>
+            )}
           </div>
         </div>
       )}
