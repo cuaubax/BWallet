@@ -1,7 +1,8 @@
 // src/components/EarnWidget.tsx
 import { useEffect, useState } from 'react'
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useSimulateContract } from 'wagmi'
 import { ethers } from 'ethers'
+import { Address, erc20Abi, parseUnits } from 'viem'
 
 
 // Aave Pool address provider
@@ -10,6 +11,8 @@ const AAVE_POOL_ADDRESS_PROVIDER = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'
 const AAVE_DATA_PROVIDER_ADDRESS = '0x68100bD5345eA474D93577127C11F39FF8463e93'
 // USDC address on Polygon
 const USDC_ADDRESS = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
+
+const AAVE_POOL_ADDRESS = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
 // JSON ABI for getReserveData (using the official view contract format)
 // Can I mis these two into one? 
@@ -141,6 +144,13 @@ const USER_RESERVES_DATA_ABI = [{
   "type": "function"
 }]
 
+const AAVE_POOL_ABI = [
+  'function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external',
+  'function withdraw(address asset, uint256 amount, address to) external returns (uint256)'
+]
+
+const MAX_ALLOWANCE = BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
+
 function calculateAPY(liquidityRate: bigint): string {
   const apr = Number(liquidityRate) / 1e27;
   const secondsPerYear = 31536000;
@@ -155,6 +165,11 @@ export const AaveComponent = () => {
   const [showModal, setShowModal] = useState(false)
   const [isWithdraw, setIsWithdraw] = useState(false)
   const [amount, setAmount] = useState('')
+
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [needsApproval, setNeedsApproval] = useState(false)
+  const [waitingForApproval, setWaitingForApproval] = useState(false)
+  const [txHash, setTxHash] = useState<string | null>(null)
 
   function openSupplyModal() {
     setIsWithdraw(false)
@@ -199,6 +214,28 @@ export const AaveComponent = () => {
     functionName: 'getUserReservesData',
     args: [AAVE_POOL_ADDRESS_PROVIDER, address]
   })
+
+  // check allowance for AAVE pool
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: USDC_ADDRESS,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [address as Address, AAVE_POOL_ADDRESS]
+  })
+
+  const { 
+    writeContractAsync: executeTransaction,
+    isPending: isPendingExecution 
+  } = useWriteContract()
+
+  const { data: simulateApproval } = useSimulateContract({
+    address: USDC_ADDRESS,
+    abi: erc20Abi,
+    functionName: "approve",
+    args: [AAVE_POOL_ADDRESS, MAX_ALLOWANCE],
+  })
+  
+
 
   useEffect(() => {
     if (data && userData) {
@@ -265,6 +302,20 @@ export const AaveComponent = () => {
       console.log('lol')
     }
   }, [data, userData])
+
+  useEffect(() => {
+    console.log("Allowance:", allowance)
+    if (amount && parseFloat(amount) > 0 && !isWithdraw && allowance !== undefined) {
+      const amountInWei = parseUnits(amount, 6)
+      const currentAllowance = allowance ? BigInt(allowance.toString()) : BigInt(0)
+      setNeedsApproval(currentAllowance < amountInWei)
+      console.log(currentAllowance)
+      console.log(amountInWei)
+    } else {
+      console.log("no approval needed")
+      setNeedsApproval(false)
+    }
+  }, [amount, isWithdraw, allowance])
 
   const profitPlaceholder = '0.00'
   const originalBalance = 4.61
