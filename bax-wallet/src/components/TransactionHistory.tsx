@@ -1,7 +1,7 @@
 import { useAccount, useChainId } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { getAlchemyClient } from '../config/alchemy'
-import { AssetTransfersWithMetadataResult, AssetTransfersCategory } from 'alchemy-sdk'
+import { AssetTransfersWithMetadataResult, AssetTransfersCategory, SortingOrder } from 'alchemy-sdk'
 
 // Reading ranbow-kit docs it seems like we might be able to get
 // transaction history straight from it, no need for alchemy
@@ -9,24 +9,25 @@ import { AssetTransfersWithMetadataResult, AssetTransfersCategory } from 'alchem
 // TODO: Might need modify this based on
 // the selected chain, keeping external,
 // ERC20 and ERC721 for testing purposes atm
+// probaly move this to config
 const CATEGORIES = [
     AssetTransfersCategory.EXTERNAL,
     AssetTransfersCategory.ERC20,
     AssetTransfersCategory.ERC721
   ]
 
-  const chainToExplorerUrl: { [chainId: number]: string } = {
+const chainToExplorerUrl: { [chainId: number]: string } = {
     137: "https://polygonscan.com/tx/{hash}",
     11155111: "https://sepolia.etherscan.io/tx/{hash}",
     11155420: "https://sepolia.optimistic.etherscan.io/tx/{hash}",
     421614: "https://sepolia.arbiscan.io/tx/{hash}",
     80002: "https://amoy.polygonscan.com/tx/{hash}",
-  }
+}
   
-  function getTxUrl(chainId: number, txHash: string): string {
+function getTxUrl(chainId: number, txHash: string): string {
     const urlTemplate = chainToExplorerUrl[chainId];
     return urlTemplate ? urlTemplate.replace("{hash}", txHash) : "";
-  }
+}
 
 export const TransactionHistory = () => {
   const [mounted, setMounted] = useState(false)
@@ -49,11 +50,13 @@ export const TransactionHistory = () => {
         const alchemy = getAlchemyClient(chainId)
         
         // Get sent transactions
+        // Invert sorting order
         const sent = await alchemy.core.getAssetTransfers({
           fromBlock: "0x0",
           fromAddress: address,
           category: CATEGORIES,
           withMetadata: true,
+          order: SortingOrder.DESCENDING,
           maxCount: 5
         })
 
@@ -63,6 +66,7 @@ export const TransactionHistory = () => {
           toAddress: address,
           category: CATEGORIES,
           withMetadata: true,
+          order: SortingOrder.DESCENDING,
           maxCount: 5
         })
 

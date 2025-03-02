@@ -152,6 +152,39 @@ export const AaveComponent = () => {
   const { address, isConnected } = useAccount()
   const [apy, setApy] = useState<string | null>(null)
   const [userPosition, setUserPosition] = useState<string | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [isWithdraw, setIsWithdraw] = useState(false)
+  const [amount, setAmount] = useState('')
+
+  function openSupplyModal() {
+    setIsWithdraw(false)
+    setAmount('')
+    setShowModal(true)
+  }
+
+  function openWithdrawModal() {
+    setIsWithdraw(true)
+    setAmount('')
+    setShowModal(true)
+  }
+
+  function handleConfirm() {
+    if (!amount || Number(amount) <= 0) {
+      console.log('Please enter a valid amount.')
+      return
+    }
+    // For now, just log it. Later, you'd call the Aave Pool contract methods:
+    //   pool.supply(asset, amount, onBehalfOf, referralCode)
+    //   pool.withdraw(asset, amount, to)
+    if (isWithdraw) {
+      console.log(`Withdraw ${amount} USDC`)
+    } else {
+      console.log(`Supply ${amount} USDC`)
+    }
+    // Close the modal after confirming
+    setShowModal(false)
+  }
+
 
   const { data, isLoading, error } = useReadContract({
     address: AAVE_DATA_PROVIDER_ADDRESS,
@@ -200,6 +233,8 @@ export const AaveComponent = () => {
     }
   }, [userData, userBalanceError])
 
+
+  // Need to figureout how to deal with this errors
   useEffect(() => {
     if (data && userData) {
       // 1. Find USDC in the reservesData
@@ -237,7 +272,7 @@ export const AaveComponent = () => {
   if (!isConnected) return <div>Please connect your wallet.</div>
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="bg-white shadow rounded-lg p-6 relative">
       <h2 className="text-xl font-semibold mb-4">Supply</h2>
       <table className="w-full text-left">
         <thead>
@@ -266,12 +301,13 @@ export const AaveComponent = () => {
             {/* Original Balance (placeholder) */}
             <td className="py-2">{originalBalance.toFixed(2)}</td>
 
-            {/* Position Value with green profit in parentheses */}
+            {/* Position Value w/ green profit if > 0 */}
             <td className="py-2">
               {userPosition}
-                <span className="text-green-600 ml-1">
+              <span className="text-green-600 ml-1">
                   (+{profitPlaceholder})
-                </span>
+              </span>
+              
             </td>
 
             {/* APY column */}
@@ -283,13 +319,13 @@ export const AaveComponent = () => {
             <td className="py-2 text-right">
               <button
                 className="mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                onClick={() => console.log('Supply button pressed')}
+                onClick={openSupplyModal}
               >
                 Supply
               </button>
               <button
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                onClick={() => console.log('Withdraw button pressed')}
+                onClick={openWithdrawModal}
               >
                 Withdraw
               </button>
@@ -297,6 +333,43 @@ export const AaveComponent = () => {
           </tr>
         </tbody>
       </table>
+
+      {/* Modal overlay */}
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white p-6 rounded shadow-md max-w-sm w-full">
+            <h2 className="text-lg font-semibold mb-4">
+              {isWithdraw ? 'Withdraw USDC' : 'Supply USDC'}
+            </h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Amount
+              </label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2"
+                placeholder="0.0"
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="mr-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={handleConfirm}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
