@@ -12,6 +12,7 @@ const AAVE_DATA_PROVIDER_ADDRESS = '0x68100bD5345eA474D93577127C11F39FF8463e93'
 const USDC_ADDRESS = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
 
 // JSON ABI for getReserveData (using the official view contract format)
+// Can I mis these two into one? 
 const UI_POOL_DATA_PROVIDER_ABI = [
   {
     "inputs": [
@@ -86,7 +87,59 @@ const UI_POOL_DATA_PROVIDER_ABI = [
     "stateMutability": "view",
     "type": "function"
   }
-];
+]
+
+const USER_RESERVES_DATA_ABI = [{
+  "inputs": [
+    {
+      "internalType": "contract IPoolAddressesProvider",
+      "name": "provider",
+      "type": "address"
+    },
+    {
+      "internalType": "address",
+      "name": "user",
+      "type": "address"
+    }
+  ],
+  "name": "getUserReservesData",
+  "outputs": [
+    {
+      "components": [
+        {
+          "internalType": "address",
+          "name": "underlyingAsset",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "scaledATokenBalance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "usageAsCollateralEnabledOnUser",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "scaledVariableDebt",
+          "type": "uint256"
+        }
+      ],
+      "internalType": "struct IUiPoolDataProviderV3.UserReserveData[]",
+      "name": "",
+      "type": "tuple[]"
+    },
+    {
+      "internalType": "uint8",
+      "name": "",
+      "type": "uint8"
+    }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+}]
 
 function calculateAPY(liquidityRate: bigint): string {
   const apr = Number(liquidityRate) / 1e27;
@@ -98,6 +151,7 @@ function calculateAPY(liquidityRate: bigint): string {
 export const AaveComponent = () => {
   const { address, isConnected } = useAccount()
   const [apy, setApy] = useState<string | null>(null)
+  const [userNumbers, setUserNumbers] = useState<string | null>(null)
 
   const { data, isLoading, error } = useReadContract({
     address: AAVE_DATA_PROVIDER_ADDRESS,
@@ -106,30 +160,27 @@ export const AaveComponent = () => {
     args: [AAVE_POOL_ADDRESS_PROVIDER]
   })
 
+  const { data: userData, error: userBalanceError } = useReadContract({
+    address: AAVE_DATA_PROVIDER_ADDRESS,
+    abi: USER_RESERVES_DATA_ABI,
+    functionName: 'getUserReservesData',
+    args: [AAVE_POOL_ADDRESS_PROVIDER, address]
+  })
+
   useEffect(() => {
-    if (data) {
+    if (data && userData) {
       console.log('ok')
-      console.log(typeof data)
-      console.log(data[0][0])
-      console.log(Object.keys(data[0][0]))
 
       const usdcReserve = data[0].find(
         (reserve: any) => reserve.underlyingAsset.toLowerCase() === USDC_ADDRESS.toLowerCase()
       )
-      // Cast the returned data to our ReserveDataTuple type.
-      /*
-      const reserveData = data as ReserveDataTuple
-      const liquidityRate = reserveData[5]
-      console.log('Liquidity Rate (ray):', liquidityRate.toString())
-      setApy(calculateAPY(liquidityRate))
-      */
 
       if (usdcReserve) {
-        console.log('USDC Reserve:', usdcReserve);
-        const liquidityRate = usdcReserve.liquidityRate;
-        console.log('Liquidity Rate (ray):', liquidityRate.toString());
-        const computedAPY = calculateAPY(liquidityRate);
-        setApy(computedAPY);
+        console.log('USDC Reserve:', usdcReserve)
+        const liquidityRate = usdcReserve.liquidityRate
+        console.log('Liquidity Rate (ray):', liquidityRate.toString())
+        const computedAPY = calculateAPY(liquidityRate)
+        setApy(computedAPY)
       } else {
         console.error('USDC reserve not found');
       }
@@ -138,9 +189,54 @@ export const AaveComponent = () => {
     }
   }, [data, error])
 
-  if (!isConnected) return <div>Please connect your wallet.</div>
 
-  const placeholderBalance = '4.61'
+  useEffect(() => {
+    if (userData) {
+      console.log('ok userData')
+      console.log(userData)
+
+    } else if (userBalanceError) {
+      console.log(userBalanceError)
+      console.error('Error reading userReserveData:', error)
+    } else {
+      console.log("no")
+    }
+  }, [userData, userBalanceError])
+
+  useEffect(() => {
+    console.log("hehe")
+    if (data && userData) {
+      // 1. Find USDC in the reservesData
+      const usdcReserve = data[0].find(
+        (r: any) => r.underlyingAsset.toLowerCase() === USDC_ADDRESS.toLowerCase()
+      )
+      const liquidityIndex = usdcReserve?.liquidityIndex
+  
+      // 2. Find USDC in the userReservesData
+      const userReserve = userData[0].find(
+        (u: any) => u.underlyingAsset.toLowerCase() === USDC_ADDRESS.toLowerCase()
+      )
+      const scaledBalance = userReserve?.scaledATokenBalance
+  
+      if (liquidityIndex && scaledBalance) {
+        // 3. Convert both from string to BigInt if needed
+        const indexBN = BigInt(liquidityIndex.toString())
+        const scaledBN = BigInt(scaledBalance.toString())
+  
+        // 4. Actual USDC deposit
+        const userDepositInUSDC = (Number(scaledBN) * (Number(indexBN) / 1e27))/(10 ** 6)
+  
+        console.log('User deposit in USDC:', userDepositInUSDC)
+        setUserNumbers(userDepositInUSDC.toString())
+        // e.g., display userDepositInUSDC in the UI
+      }
+    } else {
+      console.log('lol')
+    }
+  }, [data, userData])
+
+  
+  if (!isConnected) return <div>Please connect your wallet.</div>
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -160,13 +256,13 @@ export const AaveComponent = () => {
             <td className="py-2">
               <div className="flex items-center">
                 {/* If you have a local USDC icon, reference it here. Otherwise, remove the img. */}
-                <img src="/usdc-icon.png" alt="USDC" className="h-6 w-6 mr-2" />
+                <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=013" alt="USDC" className="h-6 w-6 mr-2" />
                 <span className="font-medium">USDC</span>
               </div>
             </td>
 
             {/* Placeholder wallet balance column */}
-            <td className="py-2">{placeholderBalance}</td>
+            <td className="py-2">{userNumbers}</td>
 
             {/* APY column */}
             <td className="py-2">{apy ? `${apy}%` : 'Loading...'}</td>
@@ -188,3 +284,5 @@ export const AaveComponent = () => {
 }
 
 export default AaveComponent
+
+// 4.610151723441871
