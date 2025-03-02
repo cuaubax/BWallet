@@ -8,7 +8,7 @@ import { ethers } from 'ethers'
 const AAVE_POOL_ADDRESS_PROVIDER = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'
 // Aave V3 Data Provider address on Polygon (example address)
 const AAVE_DATA_PROVIDER_ADDRESS = '0x68100bD5345eA474D93577127C11F39FF8463e93'
-// Official USDC address on Polygon
+// USDC address on Polygon
 const USDC_ADDRESS = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
 
 // JSON ABI for getReserveData (using the official view contract format)
@@ -151,7 +151,7 @@ function calculateAPY(liquidityRate: bigint): string {
 export const AaveComponent = () => {
   const { address, isConnected } = useAccount()
   const [apy, setApy] = useState<string | null>(null)
-  const [userNumbers, setUserNumbers] = useState<string | null>(null)
+  const [userPosition, setUserPosition] = useState<string | null>(null)
 
   const { data, isLoading, error } = useReadContract({
     address: AAVE_DATA_PROVIDER_ADDRESS,
@@ -169,8 +169,6 @@ export const AaveComponent = () => {
 
   useEffect(() => {
     if (data && userData) {
-      console.log('ok')
-
       const usdcReserve = data[0].find(
         (reserve: any) => reserve.underlyingAsset.toLowerCase() === USDC_ADDRESS.toLowerCase()
       )
@@ -192,7 +190,6 @@ export const AaveComponent = () => {
 
   useEffect(() => {
     if (userData) {
-      console.log('ok userData')
       console.log(userData)
 
     } else if (userBalanceError) {
@@ -204,7 +201,6 @@ export const AaveComponent = () => {
   }, [userData, userBalanceError])
 
   useEffect(() => {
-    console.log("hehe")
     if (data && userData) {
       // 1. Find USDC in the reservesData
       const usdcReserve = data[0].find(
@@ -227,7 +223,7 @@ export const AaveComponent = () => {
         const userDepositInUSDC = (Number(scaledBN) * (Number(indexBN) / 1e27))/(10 ** 6)
   
         console.log('User deposit in USDC:', userDepositInUSDC)
-        setUserNumbers(userDepositInUSDC.toString())
+        setUserPosition(userDepositInUSDC.toString())
         // e.g., display userDepositInUSDC in the UI
       }
     } else {
@@ -235,6 +231,8 @@ export const AaveComponent = () => {
     }
   }, [data, userData])
 
+  const profitPlaceholder = '0.00'
+  const originalBalance = 4.61
   
   if (!isConnected) return <div>Please connect your wallet.</div>
 
@@ -245,7 +243,8 @@ export const AaveComponent = () => {
         <thead>
           <tr className="border-b">
             <th className="py-2">Asset</th>
-            <th className="py-2">Wallet balance</th>
+            <th className="py-2">Balance</th>
+            <th className="py-2">Position Value</th>
             <th className="py-2">APY</th>
             <th className="py-2"></th>
           </tr>
@@ -255,25 +254,44 @@ export const AaveComponent = () => {
             {/* Asset column */}
             <td className="py-2">
               <div className="flex items-center">
-                {/* If you have a local USDC icon, reference it here. Otherwise, remove the img. */}
-                <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=013" alt="USDC" className="h-6 w-6 mr-2" />
+                <img
+                  src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=013"
+                  alt="USDC"
+                  className="h-6 w-6 mr-2"
+                />
                 <span className="font-medium">USDC</span>
               </div>
             </td>
 
-            {/* Placeholder wallet balance column */}
-            <td className="py-2">{userNumbers}</td>
+            {/* Original Balance (placeholder) */}
+            <td className="py-2">{originalBalance.toFixed(2)}</td>
+
+            {/* Position Value with green profit in parentheses */}
+            <td className="py-2">
+              {userPosition}
+                <span className="text-green-600 ml-1">
+                  (+{profitPlaceholder})
+                </span>
+            </td>
 
             {/* APY column */}
-            <td className="py-2">{apy ? `${apy}%` : 'Loading...'}</td>
+            <td className="py-2">
+              {apy ? `${apy}%` : 'Loading...'}
+            </td>
 
-            {/* Supply button column */}
+            {/* Buttons column */}
             <td className="py-2 text-right">
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 onClick={() => console.log('Supply button pressed')}
               >
                 Supply
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                onClick={() => console.log('Withdraw button pressed')}
+              >
+                Withdraw
               </button>
             </td>
           </tr>
