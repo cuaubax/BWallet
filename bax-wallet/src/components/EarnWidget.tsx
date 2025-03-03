@@ -15,7 +15,8 @@ const USDC_ADDRESS = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
 const AAVE_POOL_ADDRESS = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
 // JSON ABI for getReserveData (using the official view contract format)
-// Can I mis these two into one? 
+// Can I mix these two into one? 
+// Move to their own file anyways
 const UI_POOL_DATA_PROVIDER_ABI = [
   {
     "inputs": [
@@ -226,6 +227,8 @@ export const AaveComponent = () => {
   const [needsApproval, setNeedsApproval] = useState(false)
   const [waitingForApproval, setWaitingForApproval] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
+  const [currentTxType, setCurrentTxType] = useState<'none' | 'approval' | 'main'>('none')
+
 
   function openSupplyModal() {
     setIsWithdraw(false)
@@ -470,10 +473,10 @@ export const AaveComponent = () => {
   }
 
   const getButtonText = () => {
-    if (waitingForApproval) return 'Approving...'
-    if (isProcessing) return isWithdraw ? 'Withdrawing...' : 'Supplying...'
-    if (needsApproval) return 'Approve & Supply'
-    return isWithdraw ? 'Withdraw' : 'Supply'
+    if (waitingForApproval) return 'Aprobando...'
+    if (isProcessing) return isWithdraw ? 'Retirando...' : 'Depositando...'
+    if (needsApproval) return 'Aprueba & Deposita'
+    return isWithdraw ? 'Retira' : 'Deposita'
   }
 
   const handleConfirm = async () => {
@@ -483,7 +486,7 @@ export const AaveComponent = () => {
   const profitPlaceholder = '0.00'
   const originalBalance = 4.61
   
-  if (!isConnected) return <div>Please connect your wallet.</div>
+  if (!isConnected) return <div>Por favor conecta tu wallet.</div>
 
   return (
     <div className="bg-white shadow rounded-lg p-6 relative">
@@ -536,14 +539,14 @@ export const AaveComponent = () => {
                 className="mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 onClick={openSupplyModal}
               >
-                Supply
+                Depositar
               </button>
               <button
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                 onClick={openWithdrawModal}
                 disabled={!userPosition || parseFloat(userPosition) <= 0}
               >
-                Withdraw
+                Retirar
               </button>
             </td>
           </tr>
@@ -555,13 +558,13 @@ export const AaveComponent = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white p-6 rounded shadow-md max-w-sm w-full">
             <h2 className="text-lg font-semibold mb-4">
-              {isWithdraw ? 'Withdraw USDC' : 'Supply USDC'}
+              {isWithdraw ? 'Retira USDC' : 'Deposita USDC'}
             </h2>
             
             {/* Amount input */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount
+                Monto
               </label>
               <input
                 type="number"
@@ -569,16 +572,17 @@ export const AaveComponent = () => {
                 onChange={handleAmountChange}
                 className="w-full border border-gray-300 rounded px-3 py-2"
                 placeholder="0.0"
+                min="0"
                 disabled={isProcessing || waitingForApproval}
-              />
+              />  
               {isWithdraw && userPosition && (
                 <div className="text-xs text-gray-500 mt-1">
-                  Available: {userPosition} USDC
+                  Disponible: {userPosition} USDC
                 </div>
               )}
               {!isWithdraw && (
                 <div className="text-xs text-gray-500 mt-1">
-                  Balance: {originalBalance.toFixed(2)} USDC
+                  Disponible: {originalBalance.toFixed(2)} USDC
                 </div>
               )}
             </div>
@@ -586,7 +590,7 @@ export const AaveComponent = () => {
             {/* Approval notice */}
             {needsApproval && !isWithdraw && (
               <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded text-sm">
-                Approval needed for USDC. The supply will execute after approval.
+                Se requiere aprovar el gasto de USDC. El depósito continuará después de esto.
               </div>
             )}
             
@@ -607,7 +611,7 @@ export const AaveComponent = () => {
                 }}
                 disabled={isProcessing || waitingForApproval}
               >
-                Cancel
+                Cancelar
               </button>
               
               <button
@@ -627,33 +631,32 @@ export const AaveComponent = () => {
             {/* Transaction status */}
             {(isProcessing || waitingForApproval) && (
               <div className="mt-4 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div>
                 <p className="text-sm text-gray-600">
                   {waitingForApproval 
-                    ? "Please confirm approval in your wallet..." 
-                    : isWithdraw 
-                      ? "Please confirm withdrawal in your wallet..."
-                      : "Please confirm supply in your wallet..."}
-                </p>
-                
-                {txHash && (
-                  <a 
+                  ? "Por favor aprueba en tu wallet..." 
+                  : isWithdraw 
+                  ? "Por favor confirma el retiro en tu wallet..."
+                  : "Por favor confirma el depósito en tu wallet..."}
+                  </p>
+                  {/* Should add a similar one for swaps*/}
+                  {txHash && (
+                    <a 
                     href={`https://polygonscan.com/tx/${txHash}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:underline text-sm mt-2 inline-block"
                   >
-                    View on PolygonScan
-                  </a>
-                )}
-              </div>
+                    Ver en el explorador
+                    </a>
+                  )}
+                  </div>
             )}
             
             {/* Success message */}
             {approvalTxReceipt && !waitingForApproval && (
               <div className="mt-4 text-center">
                 <div className="text-green-500 text-3xl mb-2">✓</div>
-                <p className="text-green-600 font-medium">Transaction successful!</p>
+                <p className="text-green-600 font-medium">Transacción Exitosa!</p>
               </div>
             )}
           </div>
