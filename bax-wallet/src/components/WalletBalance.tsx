@@ -51,7 +51,7 @@ export const WalletBalance = () => {
 
     const walletURL = getExplorerUrl(chainId, address as string)
 
-    const balanceData = useReadContracts({
+    const { data: balanceData, refetch} = useReadContracts({
       contracts: [
         {
           address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
@@ -76,54 +76,84 @@ export const WalletBalance = () => {
     }, [])
 
     useEffect(() => {
-      if(balanceData){
-        const balanceTokens: UseReadContractsReturnType = balanceData
-        console.log(balanceData.data)
-        let rawBalanceUSDC = balanceData.data?.[0].result!
-        let rawBalanceWETH = balanceData.data?.[1].result!
-
-        console.log(rawBalanceUSDC)
-        console.log(rawBalanceWETH)
-
-        console.log(formatUnits(rawBalanceUSDC,6))
-        console.log(formatUnits(rawBalanceWETH,18))
-
-        setBalanceUSDC(formatUnits(rawBalanceUSDC,6))
-        setBalanceWETH(formatUnits(rawBalanceWETH,18))
+      if (!balanceData) {
+        refetch()
+        return
       }
-    }, [balanceData])
+      
+      const rawBalanceUSDC = balanceData[0]?.result;
+      const rawBalanceWETH = balanceData[1]?.result;
+      
+      if (rawBalanceUSDC != null && rawBalanceWETH != null) {
+        setBalanceUSDC(formatUnits(rawBalanceUSDC, 6));
+        setBalanceWETH(formatUnits(rawBalanceWETH, 18));
+      }
+    }, [balanceData, refetch]);
   
     if (!mounted) return null
     if (!isConnected) return null
   
     return (
-      <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Saldos</h2>
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600">Wallet:</span>
-          <span className="font-mono">
-            <a href={walletURL} target="_blank" rel="noopener noreferrer">
+      <div className="bg-white shadow-xl rounded-xl p-8 mb-8">
+        {/* Header with title and wallet link */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Saldos 
+           (<a
+            href={walletURL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-blue-600 hover:underline"
+          >
             {address?.slice(0, 6)}...{address?.slice(-4)}
-            </a>
-          </span>
+          </a>)
+          </h2>
         </div>
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-gray-600">Balance:</span>
-          <span className="font-bold">
-            {balance?.formatted} {balance?.symbol}
-          </span>
-        </div>
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-gray-600">Balance:</span>
-          <span className="font-bold">
-            {balanceUSDC} USDC
-          </span>
-        </div>
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-gray-600">Balance:</span>
-          <span className="font-bold">
-            {balanceWETH} WETH
-          </span>
+  
+        <div className="space-y-4">
+          {/* Native Token (e.g., MATIC for Polygon) */}
+          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img
+                src="https://cryptologos.cc/logos/polygon-matic-logo.png?v=013"
+                alt="MATIC"
+                className="h-8 w-8"
+              />
+              <span className="font-semibold">MATIC</span>
+            </div>
+            <span className="font-bold text-lg">
+              {balance?.formatted} {balance?.symbol}
+            </span>
+          </div>
+  
+          {/* USDC */}
+          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img
+                src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=013"
+                alt="USDC"
+                className="h-8 w-8"
+              />
+              <span className="font-semibold">USDC</span>
+            </div>
+            <span className="font-bold text-lg">
+              {balanceUSDC ? balanceUSDC : '—'} USDC
+            </span>
+          </div>
+  
+          {/* WETH */}
+          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img
+                src="https://cryptologos.cc/logos/weth-logo.svg?v=013"
+                alt="WETH"
+                className="h-8 w-8"
+              />
+              <span className="font-semibold">WETH</span>
+            </div>
+            <span className="font-bold text-lg">
+              {balanceWETH ? balanceWETH : '—'} WETH
+            </span>
+          </div>
         </div>
       </div>
     )
