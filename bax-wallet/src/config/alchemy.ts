@@ -3,6 +3,7 @@ import { Network, Alchemy } from 'alchemy-sdk'
 const ALCHEMY_KEY = 'ukCG96TR8vQVctT9fTyVFZZ6PXm5iOa-'
 
 const chainToAlchemyNetwork: { [chainId: number]: Network } = {
+  42161: Network.ARB_MAINNET,
   137: Network.MATIC_MAINNET,
   11155111: Network.ETH_SEPOLIA,
   11155420: Network.OPT_SEPOLIA,  

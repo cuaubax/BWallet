@@ -18,6 +18,7 @@ const CATEGORIES = [
 
 const chainToExplorerUrl: { [chainId: number]: string } = {
     137: "https://polygonscan.com/tx/{hash}",
+    42161: "https://arbiscan.io/tx/{hash}",
     11155111: "https://sepolia.etherscan.io/tx/{hash}",
     11155420: "https://sepolia.optimistic.etherscan.io/tx/{hash}",
     421614: "https://sepolia.arbiscan.io/tx/{hash}",

@@ -5,6 +5,7 @@ import { formatUnits } from 'ethers'
 
 const chainToExplorerUrl: { [chainId: number]: string } = {
   137: "https://polygonscan.com/address/{address}",
+  42161: "https://arbiscan.io/address/{address}",
   11155111: "https://sepolia.etherscan.io/address/{address}",
   11155420: "https://sepolia.optimistic.etherscan.io/address/{address}",
   421614: "https://sepolia.arbiscan.io/address/{address}",
@@ -21,24 +22,6 @@ interface Token {
   decimals: number
 }
 
-const tokensList: Token[] = [
-  {
-    symbol: 'USDC',
-    address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', 
-    decimals: 6
-  },
-  {
-    symbol: 'POL',
-    address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-    decimals: 18
-  },
-  {
-    symbol: 'WETH',
-    address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-    decimals: 18
-  }
-]
-
 export const WalletBalance = () => {
     const [mounted, setMounted] = useState(false)
     const { address, isConnected } = useAccount()
@@ -54,17 +37,19 @@ export const WalletBalance = () => {
     const { data: balanceData, refetch} = useReadContracts({
       contracts: [
         {
-          address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+          // Hard coded USDC arbitrum address
+          address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
           abi: erc20Abi,
           functionName: "balanceOf",
-          chainId: 137,
+          chainId: 42161,
           args: [address as Address]
         },
         {
-          address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+          // Hard coded arbitrum MEXA address
+          address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
           abi: erc20Abi,
           functionName: "balanceOf",
-          chainId: 137,
+          chainId: 42161,
           args: [address as Address]
         }
       ]
@@ -85,8 +70,9 @@ export const WalletBalance = () => {
       const rawBalanceWETH = balanceData[1]?.result;
       
       if (rawBalanceUSDC != null && rawBalanceWETH != null) {
+        // Hardcoded both decimal places
         setBalanceUSDC(formatUnits(rawBalanceUSDC, 6));
-        setBalanceWETH(formatUnits(rawBalanceWETH, 18));
+        setBalanceWETH(formatUnits(rawBalanceWETH, 6));
       }
     }, [balanceData, refetch]);
   
