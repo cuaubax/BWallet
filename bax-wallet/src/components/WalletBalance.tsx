@@ -28,6 +28,7 @@ export const WalletBalance = () => {
     const { address, isConnected } = useAccount()
     const [balanceUSDC, setBalanceUSDC] = useState<string | null>(null)
     const [balanceWETH, setBalanceWETH] = useState<string | null>(null)
+    const [balanceWBTC, setBalanceWBTC] = useState<string | null>(null)
     const { data: balance , refetch: refetchNativeBalance} = useBalance({
       address,
     })
@@ -51,6 +52,14 @@ export const WalletBalance = () => {
           abi: erc20Abi,
           functionName: "balanceOf",
           chainId: 42161,
+          args: [address as Address]
+        },
+        {
+          // hard coded WBTC in arbitrum
+          address: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
+          abi: erc20Abi,
+          chainId: 42161,
+          functionName: "balanceOf",
           args: [address as Address]
         }
       ]
@@ -81,11 +90,14 @@ export const WalletBalance = () => {
       
       const rawBalanceUSDC = balanceData[0]?.result
       const rawBalanceWETH = balanceData[1]?.result
+      const rawBalanceWBTC = balanceData[2]?.result
       
-      if (rawBalanceUSDC != null && rawBalanceWETH != null) {
+      if (rawBalanceUSDC != null && rawBalanceWETH != null && rawBalanceWBTC != null) {
         // Hardcoded both decimal places
         setBalanceUSDC(formatUnits(rawBalanceUSDC, 6))
         setBalanceWETH(formatUnits(rawBalanceWETH, 6))
+        // For WBTC decimals change
+        setBalanceWBTC(formatUnits(rawBalanceWBTC,8))
       }
     }, [balanceData, refetch]);
   
@@ -129,6 +141,21 @@ export const WalletBalance = () => {
             </div>
             <span className="font-bold text-lg">
               {balance?.formatted}
+            </span>
+          </div>
+
+          {/* WBTC */}
+          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img
+                src="https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
+                alt="WBTC"
+                className="h-8 w-8"
+              />
+              <span className="font-semibold">WBTC</span>
+            </div>
+            <span className="font-bold text-lg">
+              {balanceWBTC ? balanceWBTC : '—'} 
             </span>
           </div>
   
