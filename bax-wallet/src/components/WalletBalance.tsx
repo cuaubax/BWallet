@@ -39,8 +39,8 @@ export const WalletBalance = () => {
     const { data: balanceData, refetch} = useReadContracts({
       contracts: [
         {
-          // Hard coded USDC arbitrum address
-          address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+          // Hard coded USDT arbitrum address
+          address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
           abi: erc20Abi,
           functionName: "balanceOf",
           chainId: 42161,
@@ -141,6 +141,22 @@ export const WalletBalance = () => {
 
   
         <div className="space-y-4">
+
+          {/* MEXA */}
+          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img
+                src="/icons/MEXAS.svg"
+                alt="MEXA"
+                className="h-8 w-8"
+              />
+              <span className="font-semibold">MEX</span>
+            </div>
+            <span className="font-bold text-lg">
+              {balanceWETH ? balanceWETH : '—'} 
+            </span>
+          </div>
+
           {/* Native Token (e.g., MATIC for Polygon) */}
           <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -171,33 +187,18 @@ export const WalletBalance = () => {
             </span>
           </div>
   
-          {/* USDC */}
+          {/* USDT */}
           <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
-                src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=013"
-                alt="USDC"
+                src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
+                alt="USDT"
                 className="h-8 w-8"
               />
-              <span className="font-semibold">USDC</span>
+              <span className="font-semibold">USDT</span>
             </div>
             <span className="font-bold text-lg">
               {balanceUSDC ? balanceUSDC : '—'} 
-            </span>
-          </div>
-  
-          {/* MEXA */}
-          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img
-                src="/icons/MEXAS.svg"
-                alt="MEXA"
-                className="h-8 w-8"
-              />
-              <span className="font-semibold">MEXA</span>
-            </div>
-            <span className="font-bold text-lg">
-              {balanceWETH ? balanceWETH : '—'} 
             </span>
           </div>
         </div>
