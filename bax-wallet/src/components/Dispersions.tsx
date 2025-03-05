@@ -29,9 +29,10 @@ const BATCH_TRANSFER_ABI = [
   }
 ]
 
-// Need to change it depending on the network. We use Sepolia's contract address for POC 
-const BATCH_TRANSFER_ADDRESS = '0x09579e61a95792be2440fe2da011ec47fbfc9861' as `0x${string}`
+// Need to change it depending on the network. We use Arbitrum mainnet contract address 
+const BATCH_TRANSFER_ADDRESS = '0xE21ecd1683cd23F9EA46F26449a6fe11721Ce7aD' as `0x${string}`
 const SEPOLIA = 11155111
+const ARBITRUM = 42161 
 
 export const BatchTransfer = () => {
   const [mounted, setMounted] = useState(false)
@@ -203,7 +204,7 @@ export const BatchTransfer = () => {
 
   if (!mounted) return null
 
-  if (chainId === SEPOLIA) {
+  if (chainId === SEPOLIA || chainId === ARBITRUM) {
     return (
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-6">Dispersión Múltiple</h2>

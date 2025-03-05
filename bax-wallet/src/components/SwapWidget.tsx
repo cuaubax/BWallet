@@ -57,6 +57,11 @@ export const SwapWidget = () => {
       symbol: 'MEXA',
       address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
       decimals: 6
+    },
+    {
+      symbol: 'WBTC',
+      address: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
+      decimals: 8,
     }
   ]
 
