@@ -38,24 +38,24 @@ export const SwapWidget = () => {
   const { data: walletClient } = useWalletClient()
   const { address } = useAccount()
 
-  // Polygon mainnet
-  const CHAIN_ID = 137
+  // Arbitrum mainnet
+  const CHAIN_ID = 42161
 
   const tokensList: Token[] = [
     {
       symbol: 'USDC',
-      address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', 
+      address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', 
       decimals: 6
     },
     {
-      symbol: 'POL',
+      symbol: 'ETH',
       address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       decimals: 18
     },
     {
-      symbol: 'WETH',
-      address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
-      decimals: 18
+      symbol: 'MEXA',
+      address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
+      decimals: 6
     }
   ]
 
@@ -188,7 +188,7 @@ export const SwapWidget = () => {
   useEffect(() => {
     setMounted(true)
     const usdcToken = tokensList.find(token => token.symbol === 'USDC')
-    const polToken = tokensList.find(token => token.symbol === 'POL')
+    const polToken = tokensList.find(token => token.symbol === 'ETH')
     
     setFromToken(usdcToken || null)
     setToToken(polToken || null)
