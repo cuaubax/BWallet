@@ -325,7 +325,8 @@ export const AaveComponent = () => {
 
   useEffect(() => {
     if (data && userData) {
-      const usdcReserve = data[0].find(
+      const usdcReserveData = data as any[]
+      const usdcReserve = usdcReserveData[0].find(
         (reserve: any) => reserve.underlyingAsset.toLowerCase() === USDC_ADDRESS.toLowerCase()
       )
 
@@ -347,13 +348,15 @@ export const AaveComponent = () => {
   useEffect(() => {
     if (data && userData) {
       // 1. Find USDC in the reservesData
-      const usdcReserve = data[0].find(
+      const usdcReserveData = data as any[]
+      const usdcReserve = usdcReserveData[0].find(
         (r: any) => r.underlyingAsset.toLowerCase() === USDC_ADDRESS.toLowerCase()
       )
       const liquidityIndex = usdcReserve?.liquidityIndex
   
       // 2. Find USDC in the userReservesData
-      const userReserve = userData[0].find(
+      const userReserveData = userData as any[]
+      const userReserve = userReserveData[0].find(
         (u: any) => u.underlyingAsset.toLowerCase() === USDC_ADDRESS.toLowerCase()
       )
       const scaledBalance = userReserve?.scaledATokenBalance
