@@ -100,14 +100,14 @@ export const WalletBalance = () => {
           <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
-                src="https://cryptologos.cc/logos/polygon-matic-logo.png?v=013"
-                alt="MATIC"
+                src="https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
+                alt="ETH"
                 className="h-8 w-8"
               />
-              <span className="font-semibold">MATIC</span>
+              <span className="font-semibold">ETH</span>
             </div>
             <span className="font-bold text-lg">
-              {balance?.formatted} {balance?.symbol}
+              {balance?.formatted}
             </span>
           </div>
   
@@ -122,22 +122,22 @@ export const WalletBalance = () => {
               <span className="font-semibold">USDC</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceUSDC ? balanceUSDC : '—'} USDC
+              {balanceUSDC ? balanceUSDC : '—'} 
             </span>
           </div>
   
-          {/* WETH */}
+          {/* MEXA */}
           <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
-                src="https://cryptologos.cc/logos/weth-logo.svg?v=013"
-                alt="WETH"
+                src="/icons/MEXAS.svg"
+                alt="MEXA"
                 className="h-8 w-8"
               />
-              <span className="font-semibold">WETH</span>
+              <span className="font-semibold">MEXA</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceWETH ? balanceWETH : '—'} WETH
+              {balanceWETH ? balanceWETH : '—'} 
             </span>
           </div>
         </div>
