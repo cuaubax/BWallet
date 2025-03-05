@@ -96,17 +96,25 @@ export const WalletBalance = () => {
       <div className="bg-white shadow-xl rounded-xl p-8 mb-8">
         {/* Header with title and wallet link */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">Saldos 
-           (<a
+          <h2 className="text-2xl font-bold">
+            Saldos 
+            (<a
             href={walletURL}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-blue-600 hover:underline"
-          >
-            {address?.slice(0, 6)}...{address?.slice(-4)}
-          </a>)
+            >
+              {address?.slice(0, 6)}...{address?.slice(-4)}
+              </a>)
           </h2>
+          <button
+          className="bg-black hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg shadow flex items-center"
+          onClick={() => window.open('https://paywithmoon.com/', '_blank')}
+          >
+          Fondear Tarjeta
+            </button>
         </div>
+
   
         <div className="space-y-4">
           {/* Native Token (e.g., MATIC for Polygon) */}

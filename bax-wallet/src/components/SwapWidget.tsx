@@ -64,7 +64,7 @@ export const SwapWidget = () => {
   // one that just checks prices. 
   const executeSwap = useCallback(async () => {
     if (!walletClient || !address || !fromToken || !toToken || !amount) {
-      setError('Missing required data for swap')
+      setError('Información faltante para realizar el intercambio')
       setIsSwapping(false)
       return
     }
@@ -120,7 +120,7 @@ export const SwapWidget = () => {
       }, 3000)
     } catch (error) {
       console.error('Swap failed:', error)
-      setError('Swap transaction failed')
+      setError('Falló la transacción')
       setIsSwapping(false)
     } finally {
       setIsSwapping(false)
@@ -231,7 +231,7 @@ export const SwapWidget = () => {
       
     } catch (error) {
       console.error('Error getting quote:', error)
-      setError('Failed to get Price')
+      setError('Error al obtener precio')
       setQuoteAmount('')
       setQuote(null)
     } finally {
@@ -305,12 +305,12 @@ export const SwapWidget = () => {
 
   const handleSwapButtonClick = async () => {
     if (!amount || parseFloat(amount) <= 0 || !fromToken || !toToken) {
-      setError('Please enter a valid amount and select tokens.')
+      setError('Por favor selecciona un monto correcto y un token adecuado.')
       return
     }
     
     if (!walletClient || !address) {
-      setError('Connect your wallet first.')
+      setError('Conecta tu wallet primero.')
       return
     }
     
@@ -336,7 +336,7 @@ export const SwapWidget = () => {
       }
     } catch (error) {
       console.error('Failed to initiate transaction:', error)
-      setError('Failed to initiate transaction')
+      setError('Error al iniciar la transacción')
       setWaitingForApproval(false)
       setIsSwapping(false)
     }
@@ -358,7 +358,7 @@ export const SwapWidget = () => {
       {/* From Token Input */}
       <div className="mb-4 border rounded-lg p-4">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">From</span>
+          <span className="text-gray-600">De</span>
           <select 
             className="bg-gray-100 rounded p-1"
             value={fromToken?.address || ''}
@@ -396,7 +396,7 @@ export const SwapWidget = () => {
       {/* To Token Output */}
       <div className="mb-4 border rounded-lg p-4">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">To</span>
+          <span className="text-gray-600">A</span>
           <select 
             className="bg-gray-100 rounded p-1"
             value={toToken?.address || ''}
@@ -441,7 +441,7 @@ export const SwapWidget = () => {
       {/* Transaction Status */}
       {(isApproving || isWaitingForApproval) && (
         <p className="text-sm text-center mt-2 text-gray-600">
-          Pro favor confirma la transacción en tu wallet...
+          Por favor confirma la transacción en tu wallet...
         </p>
       )}
       {isSwapping && (
