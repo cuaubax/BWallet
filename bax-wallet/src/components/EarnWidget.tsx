@@ -10,9 +10,9 @@ import { emitter } from '../utils/eventBus'
 const AAVE_POOL_ADDRESS_PROVIDER = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'
 // Aave V3 Data Provider address on Arbitrum
 const AAVE_DATA_PROVIDER_ADDRESS = '0x5c5228aC8BC1528482514aF3e27E692495148717'
-// USDC address on Arbitrum
-const USDC_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
-const aPOLUSDC_ADDRESS = '0x724dc807b04555b71ed48a6896b6F41593b8C637'
+// USDT address on Arbitrum
+const USDC_ADDRESS = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9'
+const aPOLUSDC_ADDRESS = '0x6ab707Aca953eDAeFBc4fD23bA73294241490620'
 
 const AAVE_POOL_ADDRESS = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
@@ -244,8 +244,8 @@ export const AaveComponent = () => {
         args: [address as Address]
       },
       {
-        // Hard coded USDC arbitrum address
-        address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+        // Hard coded USDC arbitrum address TODO: fix this
+        address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
         abi: erc20Abi,
         functionName: "balanceOf",
         chainId: 42161,
@@ -337,7 +337,7 @@ export const AaveComponent = () => {
         const computedAPY = calculateAPY(liquidityRate)
         setApy(computedAPY)
       } else {
-        console.error('USDC reserve not found');
+        console.error('USDT reserve not found');
       }
     } else if (error) {
       console.error('Error reading reserve data:', error)
@@ -534,11 +534,11 @@ export const AaveComponent = () => {
             <td className="py-2">
               <div className="flex items-center">
                 <img
-                  src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=013"
-                  alt="USDC"
+                  src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
+                  alt=""
                   className="h-6 w-6 mr-2"
                 />
-                <span className="font-medium">USDC</span>
+                <span className="font-medium">USDT</span>
               </div>
             </td>
 
@@ -547,11 +547,17 @@ export const AaveComponent = () => {
 
             {/* Position Value */}
             <td className="py-2">
-              {loadingUserData ? "Loading..." : parseFloat(userPosition!).toFixed(6)}
+            {loadingUserData 
+            ? "Loading..."
+            : (isNaN(parseFloat(userPosition!))
+            ? "0"
+            : parseFloat(userPosition!).toFixed(6))}
+
               {userPosition && parseFloat(userPosition) > 0 && (
                 <span className="text-green-600 ml-1">
                   (+{(parseFloat(userPosition) - parseFloat(balanceAPolUSDC!)).toFixed(2)})
                 </span>
+                
               )}
             </td>
 
@@ -611,12 +617,12 @@ export const AaveComponent = () => {
               />  
               {isWithdraw && userPosition && (
                 <div className="text-xs text-gray-500 mt-1">
-                  Disponible: {userPosition} USDC
+                  Disponible: {userPosition} USDT
                 </div>
               )}
               {!isWithdraw && (
                 <div className="text-xs text-gray-500 mt-1">
-                  Disponible: {parseFloat(balanceUSDC!).toFixed(2)} USDC
+                  Disponible: {parseFloat(balanceUSDC!).toFixed(2)} USDT
                 </div>
               )}
             </div>
@@ -624,7 +630,7 @@ export const AaveComponent = () => {
             {/* Approval notice */}
             {needsApproval && !isWithdraw && (
               <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded text-sm">
-                Se requiere aprovar el gasto de USDC. El depósito continuará después de esto.
+                Se requiere aprovar el gasto de USDT. El depósito continuará después de esto.
               </div>
             )}
             
