@@ -1,4 +1,4 @@
-import { useAccount, useBalance, useChainId, useReadContracts, type UseReadContractsReturnType } from 'wagmi'
+import { useAccount, useBalance, useChainId, useReadContracts } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { Address, erc20Abi } from 'viem'
 import { formatUnits } from 'ethers'
@@ -79,13 +79,13 @@ export const WalletBalance = () => {
         return
       }
       
-      const rawBalanceUSDC = balanceData[0]?.result;
-      const rawBalanceWETH = balanceData[1]?.result;
+      const rawBalanceUSDC = balanceData[0]?.result
+      const rawBalanceWETH = balanceData[1]?.result
       
       if (rawBalanceUSDC != null && rawBalanceWETH != null) {
         // Hardcoded both decimal places
-        setBalanceUSDC(formatUnits(rawBalanceUSDC, 6));
-        setBalanceWETH(formatUnits(rawBalanceWETH, 6));
+        setBalanceUSDC(formatUnits(rawBalanceUSDC, 6))
+        setBalanceWETH(formatUnits(rawBalanceWETH, 6))
       }
     }, [balanceData, refetch]);
   

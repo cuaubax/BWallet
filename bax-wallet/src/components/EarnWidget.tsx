@@ -1,7 +1,7 @@
 // src/components/EarnWidget.tsx
 import { useEffect, useState } from 'react'
-import { useAccount, useReadContract, useWriteContract, useSimulateContract, useWaitForTransactionReceipt } from 'wagmi'
-import { ethers } from 'ethers'
+import { useAccount, useReadContract, useWriteContract, useSimulateContract, useWaitForTransactionReceipt, useReadContracts } from 'wagmi'
+import { formatUnits } from 'ethers'
 import { Address, erc20Abi, parseUnits } from 'viem'
 import { emitter } from '../utils/eventBus'
 
@@ -12,6 +12,7 @@ const AAVE_POOL_ADDRESS_PROVIDER = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'
 const AAVE_DATA_PROVIDER_ADDRESS = '0x5c5228aC8BC1528482514aF3e27E692495148717'
 // USDC address on Arbitrum
 const USDC_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
+const aPOLUSDC_ADDRESS = '0x724dc807b04555b71ed48a6896b6F41593b8C637'
 
 const AAVE_POOL_ADDRESS = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
@@ -228,7 +229,30 @@ export const AaveComponent = () => {
   const [needsApproval, setNeedsApproval] = useState(false)
   const [waitingForApproval, setWaitingForApproval] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
+  const [balanceAPolUSDC, setBalanceAPolUSDC] = useState<string | null>(null)
+  const [balanceUSDC, setBalanceUSDC] = useState<string | null>(null)
   const [currentTxType, setCurrentTxType] = useState<'none' | 'approval' | 'main'>('none')
+
+  const { data: balanceAPolUSDCData, refetch: refetchAPolUSDC} = useReadContracts({
+    contracts: [
+      {
+        // Hard coded aPolUSDC arbitrum address
+        address: aPOLUSDC_ADDRESS,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        chainId: 42161,
+        args: [address as Address]
+      },
+      {
+        // Hard coded USDC arbitrum address
+        address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        chainId: 42161,
+        args: [address as Address]
+      }
+    ]
+  })
 
 
   function openSupplyModal() {
@@ -283,6 +307,22 @@ export const AaveComponent = () => {
     hash: txHash as `0x${string}` | undefined,
   })
   
+  useEffect(() => {
+        if (!balanceAPolUSDCData) {
+          refetchAPolUSDC()
+          return
+        }
+        
+        const rawBalanceAPolUSDC = balanceAPolUSDCData[0]?.result
+        const rawBalanceUSDC = balanceAPolUSDCData[1]?.result
+        
+        if (rawBalanceAPolUSDC != null && rawBalanceUSDC != null) {
+          // Hardcoded both decimal places
+          setBalanceAPolUSDC(formatUnits(rawBalanceAPolUSDC, 6))
+          setBalanceUSDC(formatUnits(rawBalanceUSDC,6))
+        }
+      }, [balanceAPolUSDCData, refetchAPolUSDC]);
+
   useEffect(() => {
     if (data && userData) {
       const usdcReserve = data[0].find(
@@ -418,6 +458,7 @@ export const AaveComponent = () => {
           
           setTxHash(hash)
           emitter.emit('balanceUpdated')
+          refetchAPolUSDC()
         }
       }
     } catch (error) {
@@ -436,6 +477,7 @@ export const AaveComponent = () => {
     setWaitingForApproval(false)
     setTxHash(null)
     emitter.emit('balanceUpdated')
+    refetchAPolUSDC()
   }
 
   const refreshData = async () => {
@@ -467,7 +509,6 @@ export const AaveComponent = () => {
   }
 
   const profitPlaceholder = '0.00'
-  const originalBalance = 4.61
   
   if (!isConnected) return <div>Por favor conecta tu wallet.</div>
 
@@ -477,9 +518,9 @@ export const AaveComponent = () => {
       <table className="w-full text-left">
         <thead>
           <tr className="border-b">
-            <th className="py-2">Asset</th>
-            <th className="py-2">Balance</th>
-            <th className="py-2">Position Value</th>
+            <th className="py-2">Moneda</th>
+            <th className="py-2">Depositado</th>
+            <th className="py-2">Total Disponible</th>
             <th className="py-2">APY</th>
             <th className="py-2"></th>
           </tr>
@@ -499,14 +540,14 @@ export const AaveComponent = () => {
             </td>
 
             {/* Original Balance */}
-            <td className="py-2">{originalBalance.toFixed(2)}</td>
+            <td className="py-2">{parseFloat(balanceAPolUSDC!).toFixed(2)}</td>
 
             {/* Position Value */}
             <td className="py-2">
-              {loadingUserData ? "Loading..." : userPosition}
+              {loadingUserData ? "Loading..." : parseFloat(userPosition!).toFixed(6)}
               {userPosition && parseFloat(userPosition) > 0 && (
                 <span className="text-green-600 ml-1">
-                  (+{(parseFloat(userPosition) - originalBalance).toFixed(2)})
+                  (+{(parseFloat(userPosition) - parseFloat(balanceAPolUSDC!)).toFixed(2)})
                 </span>
               )}
             </td>
@@ -544,7 +585,7 @@ export const AaveComponent = () => {
               {isWithdraw ? 'Retira USDC' : 'Deposita USDC'}
             </h2>
             
-            {/* Amount input */}
+            {/* Amount input  need to get max correctly */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Monto
@@ -556,6 +597,13 @@ export const AaveComponent = () => {
                 className="w-full border border-gray-300 rounded px-3 py-2"
                 placeholder="0.0"
                 min="0"
+                max={
+                  isWithdraw 
+                    ? Number(userPosition) 
+                    : balanceUSDC 
+                      ? Number(balanceUSDC) 
+                      : undefined
+                }          
                 disabled={isProcessing || waitingForApproval}
               />  
               {isWithdraw && userPosition && (
@@ -565,7 +613,7 @@ export const AaveComponent = () => {
               )}
               {!isWithdraw && (
                 <div className="text-xs text-gray-500 mt-1">
-                  Disponible: {originalBalance.toFixed(2)} USDC
+                  Disponible: {parseFloat(balanceUSDC!).toFixed(2)} USDC
                 </div>
               )}
             </div>
