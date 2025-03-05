@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useAccount, useReadContract, useWriteContract, useSimulateContract, useWaitForTransactionReceipt } from 'wagmi'
 import { ethers } from 'ethers'
 import { Address, erc20Abi, parseUnits } from 'viem'
+import { emitter } from '../utils/eventBus'
 
 
 // Aave Pool address provider
@@ -416,6 +417,7 @@ export const AaveComponent = () => {
           })
           
           setTxHash(hash)
+          emitter.emit('balanceUpdated')
         }
       }
     } catch (error) {
@@ -433,6 +435,7 @@ export const AaveComponent = () => {
     setNeedsApproval(false)
     setWaitingForApproval(false)
     setTxHash(null)
+    emitter.emit('balanceUpdated')
   }
 
   const refreshData = async () => {

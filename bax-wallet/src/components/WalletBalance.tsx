@@ -2,6 +2,7 @@ import { useAccount, useBalance, useChainId, useReadContracts, type UseReadContr
 import { useEffect, useState } from 'react'
 import { Address, erc20Abi } from 'viem'
 import { formatUnits } from 'ethers'
+import { emitter } from '../utils/eventBus';
 
 const chainToExplorerUrl: { [chainId: number]: string } = {
   137: "https://polygonscan.com/address/{address}",
@@ -27,7 +28,7 @@ export const WalletBalance = () => {
     const { address, isConnected } = useAccount()
     const [balanceUSDC, setBalanceUSDC] = useState<string | null>(null)
     const [balanceWETH, setBalanceWETH] = useState<string | null>(null)
-    const { data: balance } = useBalance({
+    const { data: balance , refetch: refetchNativeBalance} = useBalance({
       address,
     })
     const chainId = useChainId()
@@ -59,6 +60,18 @@ export const WalletBalance = () => {
     useEffect(() => {
       setMounted(true)
     }, [])
+
+    useEffect(() => {
+      const handleBalanceUpdate = () => {
+        refetch()
+        refetchNativeBalance()
+      }
+    
+      emitter.on('balanceUpdated', handleBalanceUpdate);
+      return () => {
+        emitter.off('balanceUpdated', handleBalanceUpdate);
+      }
+    }, [refetch, refetchNativeBalance])
 
     useEffect(() => {
       if (!balanceData) {

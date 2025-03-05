@@ -9,6 +9,7 @@ import {
   useSimulateContract
 } from 'wagmi'
 import { concat, numberToHex, size, Address, erc20Abi } from 'viem'
+import { emitter } from '../utils/eventBus'
 
 // Constants move to a better file
 // Permit2 contract address from 0x, same for all chaing
@@ -111,9 +112,11 @@ export const SwapWidget = () => {
       const txResponse = await walletClient.sendTransaction(tx)
       console.log('Transaction sent:', txResponse)
       
+      
       // Reset form after successful swap
       setTimeout(() => {
         resetSwapState()
+        emitter.emit('balanceUpdated')
       }, 3000)
     } catch (error) {
       console.error('Swap failed:', error)
