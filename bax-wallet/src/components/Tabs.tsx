@@ -5,10 +5,10 @@ import { AaveComponent } from './EarnWidget'
 import { BatchTransfer } from './Dispersions'
 
 const tabs = [
-    { id: 'transactions', label: 'Transferencias', icon: '📊' },
-    { id: 'dispersions', label: 'Dispersiones', icon: '📤' },
-    { id: 'swap', label: 'Swaps', icon: '🔄' },
-    { id: 'earn', label: 'Préstamos', icon: '💰' },
+    { id: 'transactions', label: 'Historial', icon: "/icons/Timer.svg" },
+    { id: 'dispersions', label: 'Dispersiones', icon: "/icons/Payments.svg" },
+    { id: 'swap', label: 'Cambios', icon: "/icons/SwapVertical.svg" },
+    { id: 'earn', label: 'Ahorro', icon: "/icons/Wallet.svg" },
   ] as const
   
 
@@ -18,7 +18,7 @@ export const TabContent = () => {
   return (
     <div>
       {/* Modern Tab Navigation */}
-      <div className="border-b border-gray-200">
+      <div className="flex space-x-4 border-b mb-4">
         <div className="flex overflow-x-auto">
           {tabs.map((tab) => (
             <button
@@ -31,7 +31,7 @@ export const TabContent = () => {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
               `}
             >
-              <span className="mr-2">{tab.icon}</span>
+              <img src={tab.icon} alt={tab.label} className="h-6 w-6"/>
               {tab.label}
             </button>
           ))}
