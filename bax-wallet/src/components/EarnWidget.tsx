@@ -7,10 +7,10 @@ import { Address, erc20Abi, parseUnits } from 'viem'
 
 // Aave Pool address provider
 const AAVE_POOL_ADDRESS_PROVIDER = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'
-// Aave V3 Data Provider address on Polygon (example address)
-const AAVE_DATA_PROVIDER_ADDRESS = '0x68100bD5345eA474D93577127C11F39FF8463e93'
-// USDC address on Polygon
-const USDC_ADDRESS = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
+// Aave V3 Data Provider address on Arbitrum
+const AAVE_DATA_PROVIDER_ADDRESS = '0x5c5228aC8BC1528482514aF3e27E692495148717'
+// USDC address on Arbitrum
+const USDC_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831'
 
 const AAVE_POOL_ADDRESS = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
@@ -243,26 +243,6 @@ export const AaveComponent = () => {
     setShowModal(true)
     setError(null)
   }
-
-  /*
-  function handleConfirm() {
-    if (!amount || Number(amount) <= 0) {
-      console.log('Please enter a valid amount.')
-      return
-    }
-    // For now, just log it. Later, you'd call the Aave Pool contract methods:
-    //   pool.supply(asset, amount, onBehalfOf, referralCode)
-    //   pool.withdraw(asset, amount, to)
-    if (isWithdraw) {
-      console.log(`Withdraw ${amount} USDC`)
-    } else {
-      console.log(`Supply ${amount} USDC`)
-    }
-    // Close the modal after confirming
-    setShowModal(false)
-  }
-    */
-
 
   const { data, isLoading, error: errorData, isLoading: loadingReserves, refetch: refetchReservesData } = useReadContract({
     address: AAVE_DATA_PROVIDER_ADDRESS,
@@ -641,7 +621,7 @@ export const AaveComponent = () => {
                   {/* Should add a similar one for swaps*/}
                   {txHash && (
                     <a 
-                    href={`https://polygonscan.com/tx/${txHash}`} 
+                    href={`https://arbiscan.io/tx/${txHash}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:underline text-sm mt-2 inline-block"
