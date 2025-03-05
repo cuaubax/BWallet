@@ -108,22 +108,34 @@ export const WalletBalance = () => {
       <div className="bg-white shadow-xl rounded-xl p-8 mb-8">
         {/* Header with title and wallet link */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">
-            Saldos 
-            (<a
-            href={walletURL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-blue-600 hover:underline"
-            >
-              {address?.slice(0, 6)}...{address?.slice(-4)}
+          <div className="flex items-center space-x-2">
+            <img
+            src="/icons/Enterprise.svg"
+            alt=""
+            className="h-6 w-6"
+            />
+            <h2 className="text-2xl font-bold">
+              Saldos 
+              (<a
+              href={walletURL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-blue-600 hover:underline"
+              >
+                {address?.slice(0, 6)}...{address?.slice(-4)}
               </a>)
-          </h2>
+            </h2>
+          </div>
           <button
-          className="bg-black hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg shadow flex items-center"
+          className="bg-white border border-black hover:bg-gray-100 text-black font-medium px-4 py-2 rounded-lg shadow flex items-center space-x-2"
           onClick={() => window.open('https://paywithmoon.com/', '_blank')}
           >
-          Fondear Tarjeta
+            <img
+            src="/icons/Card.svg"
+            alt=""
+            className="h-5 w-5"
+            />
+            <span>Fondear Tarjeta</span>
             </button>
         </div>
 

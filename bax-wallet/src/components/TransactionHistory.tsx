@@ -145,7 +145,10 @@ export const TransactionHistory = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Sent Transactions */}
           <div>
-            <h3 className="text-lg font-medium mb-4 text-red-600">Enviadas</h3>
+          <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
+            <img src="/icons/Send.svg" alt="Enviadas" className="h-6 w-6" />
+            <span>Enviadas</span>
+          </h3>
             <div>
               {sentTxs.length > 0 ? (
                 sentTxs.map((tx) => (
@@ -159,7 +162,10 @@ export const TransactionHistory = () => {
 
           {/* Received Transactions */}
           <div>
-            <h3 className="text-lg font-medium mb-4 text-green-600">Recibidas</h3>
+          <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
+            <img src="/icons/Receive.svg" alt="Recibidas" className="h-6 w-6" />
+            <span>Recibidas</span>
+          </h3>
             <div>
               {receivedTxs.length > 0 ? (
                 receivedTxs.map((tx) => (
