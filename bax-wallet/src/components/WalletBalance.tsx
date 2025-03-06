@@ -105,26 +105,16 @@ export const WalletBalance = () => {
     if (!isConnected) return null
   
     return (
-      <div className="bg-white shadow-xl rounded-xl p-8 mb-8">
+      <div className="bg-sectionBackground rounded-lg p-6 mb-8">
         {/* Header with title and wallet link */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
-            <img
-            src="/icons/Enterprise.svg"
-            alt=""
-            className="h-6 w-6"
-            />
-            <h2 className="text-2xl font-bold">
-              Saldos 
-              (<a
-              href={walletURL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-blue-600 hover:underline"
-              >
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </a>)
-            </h2>
+            <button
+            onClick={() => window.open(walletURL, '_blank')}
+            className="bg-black hover:bg-gray-900 text-white font-medium px-3 py-2 rounded-lg shadow flex items-center space-x-2"
+            >
+              <span className="text-2xl font-bold">Balances</span>
+            </button>
           </div>
           <button
           className="bg-white border border-black hover:bg-gray-100 text-black font-medium px-4 py-2 rounded-lg shadow flex items-center space-x-2"
@@ -143,7 +133,7 @@ export const WalletBalance = () => {
         <div className="space-y-4">
 
           {/* MEXA */}
-          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
                 src="/icons/MEXAS.svg"
@@ -158,7 +148,7 @@ export const WalletBalance = () => {
           </div>
 
           {/* Native Token (e.g., MATIC for Polygon) */}
-          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
                 src="https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
@@ -173,7 +163,7 @@ export const WalletBalance = () => {
           </div>
 
           {/* WBTC */}
-          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
                 src="https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
@@ -188,7 +178,7 @@ export const WalletBalance = () => {
           </div>
   
           {/* USDT */}
-          <div className="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img
                 src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"

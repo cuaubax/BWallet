@@ -24,10 +24,24 @@ const chainToExplorerUrl: { [chainId: number]: string } = {
     421614: "https://sepolia.arbiscan.io/tx/{hash}",
     80002: "https://amoy.polygonscan.com/tx/{hash}",
 }
+
+const chainToExplorerUrlAddress: { [chainId: number]: string } = {
+  137: "https://polygonscan.com/address/{address}",
+  42161: "https://arbiscan.io/address/{address}",
+  11155111: "https://sepolia.etherscan.io/address/{address}",
+  11155420: "https://sepolia.optimistic.etherscan.io/address/{address}",
+  421614: "https://sepolia.arbiscan.io/address/{address}",
+  80002: "https://amoy.polygonscan.com/address/{address}",
+}
   
 function getTxUrl(chainId: number, txHash: string): string {
     const urlTemplate = chainToExplorerUrl[chainId];
     return urlTemplate ? urlTemplate.replace("{hash}", txHash) : "";
+}
+
+function getExplorerUrlAddress(chainId: number, walletAddress: string): string {
+  const urlTemplate = chainToExplorerUrlAddress[chainId];
+  return urlTemplate ? urlTemplate.replace("{address}", walletAddress) : "";
 }
 
 export const TransactionHistory = () => {
@@ -83,101 +97,116 @@ export const TransactionHistory = () => {
     fetchTransactions()
   }, [address, chainId])
 
-  const TransactionCardSend = ({ tx }: { tx: AssetTransfersWithMetadataResult }) => (
-    <div className="bg-white rounded-lg shadow p-4 mb-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="font-mono text-sm">
-          <a href={getTxUrl(chainId,tx.hash)} target="_blank" rel="noopener noreferrer">
-          {tx.hash?.slice(0, 10)}...
-          </a>
-        </span>
-        <span className="text-gray-600 text-sm">
-          {new Date(tx.metadata.blockTimestamp).toLocaleString()}
-        </span>
-      </div>
-      <div className="text-sm">
-        <p className="truncate">
-          <span className="text-gray-600">Para: </span>
-          {tx.to?.slice(0, 6)}...{tx.to?.slice(-4)}
-        </p>
-        <p>
-          <span className="text-gray-600">Monto: </span>
-          {tx.value} {tx.asset}
-        </p>
-      </div>
-    </div>
-  )
-
-  const TransactionCard = ({ tx }: { tx: AssetTransfersWithMetadataResult }) => (
-    <div className="bg-white rounded-lg shadow p-4 mb-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="font-mono text-sm">
-        <a href={getTxUrl(chainId,tx.hash)} target="_blank" rel="noopener noreferrer">
-          {tx.hash?.slice(0, 10)}...
-        </a>
-        </span>
-        <span className="text-gray-600 text-sm">
-          {new Date(tx.metadata.blockTimestamp).toLocaleString()}
-        </span>
-      </div>
-      <div className="text-sm">
-        <p className="truncate">
-          <span className="text-gray-600">Desde: </span>
-          {tx.from?.slice(0, 6)}...{tx.to?.slice(-4)}
-        </p>
-        <p>
-          <span className="text-gray-600">Monto: </span>
-          {tx.value} {tx.asset}
-        </p>
-      </div>
-    </div>
-  )
-
   if (!mounted || !isConnected) return null
 
   return (
-    <div className="bg-gray-50 rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-6">Historial de Transferencias</h2>
-      
+    <div className="bg-sectionBackground rounded-lg p-6">
       {loading ? (
-        <div className="text-center py-4">Cargando...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Sent Transactions */}
-          <div>
-          <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
-            <img src="/icons/Send.svg" alt="Enviadas" className="h-6 w-6" />
-            <span>Enviadas</span>
-          </h3>
-            <div>
-              {sentTxs.length > 0 ? (
-                sentTxs.map((tx) => (
-                  <TransactionCardSend key={tx.uniqueId} tx={tx} />
-                ))
-              ) : (
-                <p className="text-gray-500 text-center">No hay transacciones enviadas</p>
-              )}
-            </div>
-          </div>
+    <div className="text-center py-4">Cargando...</div>
+  ) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Sent (Enviadas) */}
+      <div>
+        <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
+          <img src="/icons/Send.svg" alt="Enviadas" className="h-6 w-6" />
+          <span>Enviadas</span>
+        </h3>
+        <table className="w-full table-fixed border-separate border-spacing-y-2">
+          <thead>
+            <tr className="text-left font-bold text-gray-700 border-b">
+              <th className="w-24 py-2">Para</th>
+              <th className="w-20 py-2 text-center">Monto</th>
+              <th className="w-20 py-2 text-center">Token</th>
+              <th className="w-32 py-2 text-center">Tx Hash</th>
+              <th className="w-32 py-2 text-right">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sentTxs.length > 0 ? (
+              sentTxs.map((tx) => (
+                <tr key={tx.uniqueId} className="border-b last:border-0">
+                  <td className="py-2">
+                  <a href={getExplorerUrlAddress(chainId,tx.to!)} target="_blank" rel="noopener noreferrer">
+                    {tx.to
+                      ? `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`
+                      : ''}
+                  </a>
+                  </td>
+                  <td className="py-2 text-center">{tx.value}</td>
+                  <td className="py-2 text-center">{tx.asset}</td>
+                  <td className="py-2 text-center">
+                    <a href={getTxUrl(chainId,tx.hash)} target="_blank" rel="noopener noreferrer">
+                      {tx.hash?.slice(0, 10)}...
+                      </a>
+                  </td>
+                  <td className="py-2 text-right">
+                    {new Date(tx.metadata.blockTimestamp).toLocaleString()}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="text-gray-500 text-center py-4">
+                  No hay transacciones enviadas
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-          {/* Received Transactions */}
-          <div>
-          <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
-            <img src="/icons/Receive.svg" alt="Recibidas" className="h-6 w-6" />
-            <span>Recibidas</span>
-          </h3>
-            <div>
-              {receivedTxs.length > 0 ? (
-                receivedTxs.map((tx) => (
-                  <TransactionCard key={tx.uniqueId} tx={tx} />
-                ))
-              ) : (
-                <p className="text-gray-500 text-center">No hay transacciones recibidas</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Received (Recibidas) */}
+      <div>
+        <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
+          <img src="/icons/Receive.svg" alt="Recibidas" className="h-6 w-6" />
+          <span>Recibidas</span>
+        </h3>
+        <table className="w-full table-fixed border-separate border-spacing-y-2">
+          <thead>
+            <tr className="text-left font-bold text-gray-700 border-b">
+              <th className="w-24 py-2">Desde</th>
+              <th className="w-20 py-2 text-center">Monto</th>
+              <th className="w-20 py-2 text-center">Token</th>
+              <th className="w-32 py-2 text-center">Tx Hash</th>
+              <th className="w-32 py-2 text-right">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {receivedTxs.length > 0 ? (
+              receivedTxs.map((tx) => (
+                <tr key={tx.uniqueId} className="border-b last:border-0">
+                  <td className="py-2">
+                  <a href={getExplorerUrlAddress(chainId,tx.from!)} target="_blank" rel="noopener noreferrer">
+                    {tx.to
+                      ? `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
+                      : ''}
+                  </a>
+                  </td>
+                  <td className="py-2 text-center">{tx.value}</td>
+                  <td className="py-2 text-center">{tx.asset}</td>
+                  <td className="py-2 text-center">
+                    <a href={getTxUrl(chainId,tx.hash)} target="_blank" rel="noopener noreferrer">
+                      {tx.hash?.slice(0, 10)}...
+                    </a>
+                  </td>
+                  <td className="py-2 text-right">
+                    {new Date(tx.metadata.blockTimestamp).toLocaleString()}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="text-gray-500 text-center py-4">
+                  No hay transacciones recibidas
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )}
     </div>
   )
+  
 }
