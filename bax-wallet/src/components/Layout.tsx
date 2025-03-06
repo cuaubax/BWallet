@@ -44,7 +44,7 @@ export const Layout = () => {
       </aside>
 
       {/* Main Area */}
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 bg-white">
         <div className="flex justify-end mb-4">
           <WalletConnect />
         </div>

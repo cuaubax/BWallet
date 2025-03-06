@@ -9,6 +9,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        sectionBackground: "#F9F9F9",
+        itemBackground: "#F4F4F4",
         background: "var(--background)",
         foreground: "var(--foreground)",
         loadingGradient: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
