@@ -122,7 +122,7 @@ export const TransactionHistory = () => {
       </div>
       <div className="text-sm">
         <p className="truncate">
-          <span className="text-gray-600">Desde: </span>
+          <span className="text-gray-600">De: </span>
           {tx.from?.slice(0, 6)}...{tx.to?.slice(-4)}
         </p>
         <p>
@@ -133,43 +133,77 @@ export const TransactionHistory = () => {
     </div>
   )
 
+  const TransactionRow = ({
+    tx,
+    type,
+  }: {
+    tx: AssetTransfersWithMetadataResult;
+    type: 'sent' | 'received';
+  }) => (
+    <div className="flex items-center py-2 border-b last:border-0">
+      {/* To/From */}
+      <div className="flex-1 text-sm font-medium text-gray-700">
+        {type === 'sent' ? 'Para:' : 'Desde:'}{' '}
+        {type === 'sent'
+          ? tx.to ? `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}` : ''
+          : tx.from ? `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}` : ''}
+      </div>
+      {/* Amount */}
+      <div className="flex-1 text-sm text-gray-700 text-center">
+        {tx.value}
+      </div>
+      {/* Token */}
+      <div className="flex-1 text-sm text-gray-700 text-center">
+        {tx.asset}
+      </div>
+      {/* Tx Hash */}
+      <div className="flex-1 text-sm text-gray-700 text-center">
+        {tx.hash ? `${tx.hash.slice(0, 10)}...` : ''}
+      </div>
+      {/* Date */}
+      <div className="flex-1 text-sm text-gray-700 text-right">
+        {new Date(tx.metadata.blockTimestamp).toLocaleString()}
+      </div>
+    </div>
+  );
+  
+
   if (!mounted || !isConnected) return null
 
   return (
     <div className="bg-gray-50 rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-6">Historial de Transferencias</h2>
-      
       {loading ? (
         <div className="text-center py-4">Cargando...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Sent Transactions */}
+          {/* Sent Transactions Column */}
           <div>
-          <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
-            <img src="/icons/Send.svg" alt="Enviadas" className="h-6 w-6" />
-            <span>Enviadas</span>
-          </h3>
+            <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
+              <img src="/icons/Send.svg" alt="Enviadas" className="h-6 w-6" />
+              <span>Enviadas</span>
+            </h3>
             <div>
               {sentTxs.length > 0 ? (
                 sentTxs.map((tx) => (
-                  <TransactionCardSend key={tx.uniqueId} tx={tx} />
+                  <TransactionRow key={tx.uniqueId} tx={tx} type="sent" />
                 ))
               ) : (
                 <p className="text-gray-500 text-center">No hay transacciones enviadas</p>
               )}
             </div>
           </div>
-
-          {/* Received Transactions */}
+  
+          {/* Received Transactions Column */}
           <div>
-          <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
-            <img src="/icons/Receive.svg" alt="Recibidas" className="h-6 w-6" />
-            <span>Recibidas</span>
-          </h3>
+            <h3 className="text-lg font-bold mb-4 text-black flex items-center space-x-2">
+              <img src="/icons/Receive.svg" alt="Recibidas" className="h-6 w-6" />
+              <span>Recibidas</span>
+            </h3>
             <div>
               {receivedTxs.length > 0 ? (
                 receivedTxs.map((tx) => (
-                  <TransactionCard key={tx.uniqueId} tx={tx} />
+                  <TransactionRow key={tx.uniqueId} tx={tx} type="received" />
                 ))
               ) : (
                 <p className="text-gray-500 text-center">No hay transacciones recibidas</p>
@@ -180,4 +214,5 @@ export const TransactionHistory = () => {
       )}
     </div>
   )
+  
 }
