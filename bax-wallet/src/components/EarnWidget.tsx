@@ -516,150 +516,188 @@ export const AaveComponent = () => {
   if (!isConnected) return <div>Por favor conecta tu wallet.</div>
 
   return (
-    <div className="bg-sectionBackground shadow rounded-lg p-6 relative">
-      <table className="w-full table-fixed border-separate border-spacing-y-2">
-      <thead>
-    <tr className="bg-sectionBackground">
-      <th className="w-24 py-2 text-left">Moneda</th>
-      <th className="w-20 py-2 text-center">Disponible</th>
-      <th className="w-20 py-2 text-center">Total depositado</th>
-      <th className="w-32 py-2 text-center">APY</th>
-      <th className="w-32 py-2 text-right"> </th>
-    </tr>
-  </thead>
-  <tbody>
-
-    {/* Placeholder row */}
-    <tr className="bg-itemBackground rounded-lg shadow-sm">
-      <td className="w-24 py-2">
-        <div className="flex items-center">
-          <img
-            src="/icons/MEXAS.svg"
-            alt="Placeholder"
-            className="h-6 w-6 mr-2"
-          />
-          <span className="font-medium">MEX</span>
-        </div>
-      </td>
-      <td className="w-20 py-2 text-center">123.45</td>
-      <td className="w-20 py-2 text-center">678.90</td>
-      <td className="w-32 py-2 text-center">5.67%</td>
-      <td className="w-32 py-2 text-right">
-        <button className="bg-black text-white mr-2 px-4 py-2 rounded-lg mr-2">
-          Depositar
-        </button>
-        <button className="bg-white text-black border border-black rounded-lg px-4 py-2">
-          Retirar
-        </button>
-      </td>
-    </tr>
-
-    {/* Actual data row */}
-    <tr className="bg-itemBackground rounded-lg shadow-sm">
-      <td className="w-24 py-2">
-        <div className="flex items-center">
-          <img
-            src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
-            alt="USDT"
-            className="h-6 w-6 mr-2"
-          />
-          <span className="font-medium">USDT</span>
-        </div>
-      </td>
-      <td className="w-20 py-2 text-center">
-        {parseFloat(balanceUSDC!).toFixed(2)}
-      </td>
-      <td className="w-20 py-2 text-center">
-        {loadingUserData 
-          ? "Loading..." 
-          : (isNaN(parseFloat(userPosition!))
-              ? "0"
-              : parseFloat(userPosition!).toFixed(6))}
-        {userPosition && parseFloat(userPosition) > 0 && (
-          <span className="text-green-600 ml-1">
-            (+{(parseFloat(userPosition) - parseFloat(balanceAPolUSDC!)).toFixed(2)})
-          </span>
-        )}
-      </td>
-      <td className="w-32 py-2 text-center">
-        {loadingReserves ? "Loading..." : apy ? `${apy}%` : "0.00%"}
-      </td>
-      <td className="w-32 py-2 text-right">
-        <button 
-        className="bg-black text-white mr-2 px-4 py-2 rounded-lg"
-        onClick={openSupplyModal}>
-          Depositar
-        </button>
-        <button 
-        className="bg-white text-black border border-black rounded-lg px-4 py-2"
-        onClick={openWithdrawModal}
-        disabled={!userPosition || parseFloat(userPosition) <= 0}
-        >
-          Retirar
-        </button>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-
-      {/* Modal overlay */}
+    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <table className="w-full border-separate border-spacing-y-3">
+        <thead>
+          <tr>
+            <th className="text-xs text-gray-500 font-medium text-left pl-3">Moneda</th>
+            <th className="text-xs text-gray-500 font-medium text-center">Disponible</th>
+            <th className="text-xs text-gray-500 font-medium text-center">Total depositado</th>
+            <th className="text-xs text-gray-500 font-medium text-center">APY</th>
+            <th className="text-xs text-gray-500 font-medium text-right pr-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* Placeholder row */}
+          <tr className="bg-itemBackground rounded-xl">
+            <td className="py-4 pl-3 bg-gray-50 rounded-l-xl">
+              <div className="flex items-center">
+                <img
+                  src="/icons/MEXAS.svg"
+                  alt="Placeholder"
+                  className="h-6 w-6 mr-2 rounded-full"
+                />
+                <span className="font-medium">MEX</span>
+              </div>
+            </td>
+            <td className="py-4 text-center bg-gray-50">
+              <span className="font-medium">123.45</span>
+            </td>
+            <td className="py-4 text-center bg-gray-50">
+              <span className="font-medium">678.90</span>
+            </td>
+            <td className="py-4 text-center bg-gray-50">
+              <span className="font-medium">5.67%</span>
+            </td>
+            <td className="py-4 pr-3 bg-gray-50 rounded-r-xl">
+              <div className="flex justify-end space-x-2">
+                <button className="bg-black text-white px-3 py-1.5 rounded-lg text-sm font-medium">
+                  Depositar
+                </button>
+                <button className="bg-white text-black border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium">
+                  Retirar
+                </button>
+              </div>
+            </td>
+          </tr>
+  
+          {/* Actual data row */}
+          <tr className="bg-itemBackground rounded-xl">
+            <td className="py-4 pl-3 bg-gray-50 rounded-l-xl">
+              <div className="flex items-center">
+                <img
+                  src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
+                  alt="USDT"
+                  className="h-6 w-6 mr-2 rounded-full"
+                />
+                <span className="font-medium">USDT</span>
+              </div>
+            </td>
+            <td className="py-4 text-center bg-gray-50">
+              <span className="font-medium">
+                {balanceUSDC ? parseFloat(balanceUSDC).toFixed(2) : "0.00"}
+              </span>
+            </td>
+            <td className="py-4 text-center bg-gray-50">
+              <div>
+                <span className="font-medium">
+                  {loadingUserData
+                    ? "..."
+                    : (isNaN(parseFloat(userPosition!))
+                        ? "0.00"
+                        : parseFloat(userPosition!).toFixed(2))}
+                </span>
+                {userPosition && parseFloat(userPosition) > 0 && (
+                  <span className="text-green-600 text-xs ml-1">
+                    (+{(parseFloat(userPosition) - parseFloat(balanceAPolUSDC!)).toFixed(2)})
+                  </span>
+                )}
+              </div>
+            </td>
+            <td className="py-4 text-center bg-gray-50">
+              <span className="font-medium">
+                {loadingReserves ? "..." : apy ? `${apy}%` : "0.00%"}
+              </span>
+            </td>
+            <td className="py-4 pr-3 bg-gray-50 rounded-r-xl">
+              <div className="flex justify-end space-x-2">
+                <button 
+                  className="bg-black text-white px-3 py-1.5 rounded-lg text-sm font-medium"
+                  onClick={openSupplyModal}>
+                  Depositar
+                </button>
+                <button 
+                  className="bg-white text-black border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200"
+                  onClick={openWithdrawModal}
+                  disabled={!userPosition || parseFloat(userPosition) <= 0}>
+                  Retirar
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  
+      {/* Modal overlay - redesigned */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div className="bg-white p-6 rounded shadow-md max-w-sm w-full">
-            <h2 className="text-lg font-semibold mb-4">
+          <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-semibold mb-5">
               {isWithdraw ? 'Retira USDT' : 'Deposita USDT'}
             </h2>
             
-            {/* Amount input  need to get max correctly */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Monto
-              </label>
-              <input
-                type="number"
-                value={amount}
-                onChange={handleAmountChange}
-                className="w-full border border-gray-300 rounded px-3 py-2"
-                placeholder="0.0"
-                min="0"
-                max={
-                  isWithdraw 
-                    ? Number(userPosition) 
-                    : Number(balanceUSDC)
-                }          
-                disabled={isProcessing || waitingForApproval}
-              />  
-              {isWithdraw && userPosition && (
-                <div className="text-xs text-gray-500 mt-1">
-                  Disponible: {userPosition} USDT
+            {/* Amount input with improved styling */}
+            <div className="mb-5">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm text-gray-600 font-medium">
+                  Monto
+                </label>
+                {isWithdraw && userPosition && (
+                  <div className="text-xs text-gray-500">
+                    Disponible: <span className="font-medium">{userPosition} USDT</span>
+                  </div>
+                )}
+                {!isWithdraw && (
+                  <div className="text-xs text-gray-500">
+                    Disponible: <span className="font-medium">{parseFloat(balanceUSDC!).toFixed(2)} USDT</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center bg-gray-50 rounded-xl p-3 border border-transparent focus-within:border-gray-200">
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  className="w-full text-xl font-bold outline-none bg-transparent"
+                  placeholder="0.00"
+                  min="0"
+                  max={
+                    isWithdraw 
+                      ? Number(userPosition) 
+                      : Number(balanceUSDC)
+                  }          
+                  disabled={isProcessing || waitingForApproval}
+                />
+                <div className="flex items-center space-x-1 ml-2">
+                  <img 
+                    src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040" 
+                    alt="USDT" 
+                    className="w-5 h-5 rounded-full" 
+                  />
+                  <span className="font-medium">USDT</span>
                 </div>
-              )}
-              {!isWithdraw && (
-                <div className="text-xs text-gray-500 mt-1">
-                  Disponible: {parseFloat(balanceUSDC!).toFixed(2)} USDT
-                </div>
-              )}
+              </div>
             </div>
             
             {/* Approval notice */}
             {needsApproval && !isWithdraw && (
-              <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded text-sm">
-                Se requiere aprovar el gasto de USDT. El depósito continuará después de esto.
+              <div className="mb-4 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-gray-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Se requiere aprovar el gasto de USDT. El depósito continuará después de esto.</span>
+                </div>
               </div>
             )}
             
             {/* Error message */}
             {error && (
-              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
-                {error}
+              <div className="mb-4 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-gray-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
               </div>
             )}
             
             {/* Action buttons */}
-            <div className="flex justify-end">
+            <div className="flex justify-end mt-6 space-x-3">
               <button
-                className="bg-white text-black border border-black rounded-lg px-4 py-2 mr-2 px-4 py-2"
+                className="bg-white text-black border border-gray-300 rounded-xl px-4 py-2.5 font-medium hover:bg-gray-50 transition-colors"
                 onClick={() => {
                   setShowModal(false)
                   resetState()
@@ -670,48 +708,61 @@ export const AaveComponent = () => {
               </button>
               
               <button
-              className="bg-black text-white rounded-lg px-4 py-2 disabled:bg-gray-400"
-              onClick={handleConfirm}
-              disabled={
-                !amount || 
-                parseFloat(amount) <= 0 || 
-                isProcessing || 
-                waitingForApproval ||
-                (isWithdraw && !!userPosition && parseFloat(amount) > parseFloat(userPosition))
+                className="bg-black text-white rounded-xl px-4 py-2.5 font-medium disabled:bg-gray-300 disabled:text-gray-500 transition-colors"
+                onClick={handleConfirm}
+                disabled={
+                  !amount || 
+                  parseFloat(amount) <= 0 || 
+                  isProcessing || 
+                  waitingForApproval ||
+                  (isWithdraw && !!userPosition && parseFloat(amount) > parseFloat(userPosition))
                 }>
-                  {getButtonText()}
-                  </button>
+                {getButtonText()}
+              </button>
             </div>
             
             {/* Transaction status */}
             {(isProcessing || waitingForApproval) && (
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">
-                  {waitingForApproval 
-                  ? "Por favor aprueba en tu wallet..." 
-                  : isWithdraw 
-                  ? "Por favor confirma el retiro en tu wallet..."
-                  : "Por favor confirma el depósito en tu wallet..."}
-                  </p>
-                  {/* Should add a similar one for swaps*/}
-                  {txHash && (
-                    <a 
+              <div className="mt-5 flex flex-col items-center">
+                <div className="flex items-center text-sm text-gray-600 mb-2">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>
+                    {waitingForApproval 
+                      ? "Por favor aprueba en tu wallet..." 
+                      : isWithdraw 
+                        ? "Por favor confirma el retiro en tu wallet..."
+                        : "Por favor confirma el depósito en tu wallet..."
+                    }
+                  </span>
+                </div>
+                {txHash && (
+                  <a 
                     href={`https://arbiscan.io/tx/${txHash}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline text-sm mt-2 inline-block"
+                    className="text-gray-600 hover:text-black text-sm mt-1 inline-flex items-center"
                   >
-                    Ver en el explorador
-                    </a>
-                  )}
-                  </div>
+                    <span>Ver en el explorador</span>
+                    <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
+              </div>
             )}
             
             {/* Success message */}
             {approvalTxReceipt && !waitingForApproval && (
-              <div className="mt-4 text-center">
-                <div className="text-green-500 text-3xl mb-2">✓</div>
-                <p className="text-green-600 font-medium">Transacción Exitosa!</p>
+              <div className="mt-5 flex flex-col items-center">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                  <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-gray-900 font-medium">¡Transacción Exitosa!</p>
               </div>
             )}
           </div>
