@@ -369,7 +369,7 @@ export const AaveComponent = () => {
         // 4. Actual USDC deposit
         const userDepositInUSDC = (Number(scaledBN) * (Number(indexBN) / 1e27))/(10 ** 6)
   
-        console.log('User deposit in USDC:', userDepositInUSDC)
+        console.log('User deposit in USDT:', userDepositInUSDC)
         setUserPosition(userDepositInUSDC.toString())
         // e.g., display userDepositInUSDC in the UI
       }
@@ -516,82 +516,99 @@ export const AaveComponent = () => {
   if (!isConnected) return <div>Por favor conecta tu wallet.</div>
 
   return (
-    <div className="bg-white shadow rounded-lg p-6 relative">
-      <h2 className="text-xl font-semibold mb-4">Supply</h2>
-      <table className="w-full text-left">
-        <thead>
-          <tr className="border-b">
-            <th className="py-2">Moneda</th>
-            <th className="py-2">Depositado</th>
-            <th className="py-2">Total Disponible</th>
-            <th className="py-2">APY</th>
-            <th className="py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b">
-            {/* Asset column */}
-            <td className="py-2">
-              <div className="flex items-center">
-                <img
-                  src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
-                  alt=""
-                  className="h-6 w-6 mr-2"
-                />
-                <span className="font-medium">USDT</span>
-              </div>
-            </td>
+    <div className="bg-sectionBackground shadow rounded-lg p-6 relative">
+      <table className="w-full table-fixed border-separate border-spacing-y-2">
+      <thead>
+    <tr className="bg-sectionBackground">
+      <th className="w-24 py-2 text-left">Moneda</th>
+      <th className="w-20 py-2 text-center">Disponible</th>
+      <th className="w-20 py-2 text-center">Total depositado</th>
+      <th className="w-32 py-2 text-center">APY</th>
+      <th className="w-32 py-2 text-right"> </th>
+    </tr>
+  </thead>
+  <tbody>
 
-            {/* Original Balance */}
-            <td className="py-2">{parseFloat(balanceAPolUSDC!).toFixed(2)}</td>
+    {/* Placeholder row */}
+    <tr className="bg-itemBackground rounded-lg shadow-sm">
+      <td className="w-24 py-2">
+        <div className="flex items-center">
+          <img
+            src="/icons/MEXAS.svg"
+            alt="Placeholder"
+            className="h-6 w-6 mr-2"
+          />
+          <span className="font-medium">MEX</span>
+        </div>
+      </td>
+      <td className="w-20 py-2 text-center">123.45</td>
+      <td className="w-20 py-2 text-center">678.90</td>
+      <td className="w-32 py-2 text-center">5.67%</td>
+      <td className="w-32 py-2 text-right">
+        <button className="bg-black text-white mr-2 px-4 py-2 rounded-lg mr-2">
+          Depositar
+        </button>
+        <button className="bg-white text-black border border-black rounded-lg px-4 py-2">
+          Retirar
+        </button>
+      </td>
+    </tr>
 
-            {/* Position Value */}
-            <td className="py-2">
-            {loadingUserData 
-            ? "Loading..."
-            : (isNaN(parseFloat(userPosition!))
-            ? "0"
-            : parseFloat(userPosition!).toFixed(6))}
+    {/* Actual data row */}
+    <tr className="bg-itemBackground rounded-lg shadow-sm">
+      <td className="w-24 py-2">
+        <div className="flex items-center">
+          <img
+            src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
+            alt="USDT"
+            className="h-6 w-6 mr-2"
+          />
+          <span className="font-medium">USDT</span>
+        </div>
+      </td>
+      <td className="w-20 py-2 text-center">
+        {parseFloat(balanceUSDC!).toFixed(2)}
+      </td>
+      <td className="w-20 py-2 text-center">
+        {loadingUserData 
+          ? "Loading..." 
+          : (isNaN(parseFloat(userPosition!))
+              ? "0"
+              : parseFloat(userPosition!).toFixed(6))}
+        {userPosition && parseFloat(userPosition) > 0 && (
+          <span className="text-green-600 ml-1">
+            (+{(parseFloat(userPosition) - parseFloat(balanceAPolUSDC!)).toFixed(2)})
+          </span>
+        )}
+      </td>
+      <td className="w-32 py-2 text-center">
+        {loadingReserves ? "Loading..." : apy ? `${apy}%` : "0.00%"}
+      </td>
+      <td className="w-32 py-2 text-right">
+        <button 
+        className="bg-black text-white mr-2 px-4 py-2 rounded-lg"
+        onClick={openSupplyModal}>
+          Depositar
+        </button>
+        <button 
+        className="bg-white text-black border border-black rounded-lg px-4 py-2"
+        onClick={openWithdrawModal}
+        disabled={!userPosition || parseFloat(userPosition) <= 0}
+        >
+          Retirar
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-              {userPosition && parseFloat(userPosition) > 0 && (
-                <span className="text-green-600 ml-1">
-                  (+{(parseFloat(userPosition) - parseFloat(balanceAPolUSDC!)).toFixed(2)})
-                </span>
-                
-              )}
-            </td>
-
-            {/* APY column */}
-            <td className="py-2">
-              {loadingReserves ? "Loading..." : apy ? `${apy}%` : "0.00%"}
-            </td>
-
-            {/* Buttons column */}
-            <td className="py-2 text-right">
-              <button
-                className="mr-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                onClick={openSupplyModal}
-              >
-                Depositar
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                onClick={openWithdrawModal}
-                disabled={!userPosition || parseFloat(userPosition) <= 0}
-              >
-                Retirar
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
 
       {/* Modal overlay */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white p-6 rounded shadow-md max-w-sm w-full">
             <h2 className="text-lg font-semibold mb-4">
-              {isWithdraw ? 'Retira USDC' : 'Deposita USDC'}
+              {isWithdraw ? 'Retira USDT' : 'Deposita USDT'}
             </h2>
             
             {/* Amount input  need to get max correctly */}
@@ -609,9 +626,7 @@ export const AaveComponent = () => {
                 max={
                   isWithdraw 
                     ? Number(userPosition) 
-                    : balanceUSDC 
-                      ? Number(balanceUSDC) 
-                      : undefined
+                    : Number(balanceUSDC)
                 }          
                 disabled={isProcessing || waitingForApproval}
               />  
@@ -644,7 +659,7 @@ export const AaveComponent = () => {
             {/* Action buttons */}
             <div className="flex justify-end">
               <button
-                className="mr-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                className="bg-white text-black border border-black rounded-lg px-4 py-2 mr-2 px-4 py-2"
                 onClick={() => {
                   setShowModal(false)
                   resetState()
@@ -655,7 +670,7 @@ export const AaveComponent = () => {
               </button>
               
               <button
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+              className="bg-black text-white rounded-lg px-4 py-2 disabled:bg-gray-400"
               onClick={handleConfirm}
               disabled={
                 !amount || 

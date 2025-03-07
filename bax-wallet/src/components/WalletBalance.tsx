@@ -4,7 +4,7 @@ import { Address, erc20Abi } from 'viem'
 import { formatUnits } from 'ethers'
 import { emitter } from '../utils/eventBus';
 
-const chainToExplorerUrl: { [chainId: number]: string } = {
+const chainToExplorerUrlAddress: { [chainId: number]: string } = {
   137: "https://polygonscan.com/address/{address}",
   42161: "https://arbiscan.io/address/{address}",
   11155111: "https://sepolia.etherscan.io/address/{address}",
@@ -14,13 +14,8 @@ const chainToExplorerUrl: { [chainId: number]: string } = {
 }
 
 function getExplorerUrl(chainId: number, walletAddress: string): string {
-  const urlTemplate = chainToExplorerUrl[chainId];
+  const urlTemplate = chainToExplorerUrlAddress[chainId];
   return urlTemplate ? urlTemplate.replace("{address}", walletAddress) : "";
-}
-interface Token {
-  symbol: string
-  address: string
-  decimals: number
 }
 
 export const WalletBalance = () => {
