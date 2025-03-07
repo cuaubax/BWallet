@@ -21,6 +21,7 @@ interface Token {
   symbol: string
   address: string
   decimals: number
+  logoUrl: string
 }
 
 export const SwapWidget = () => {
@@ -46,22 +47,26 @@ export const SwapWidget = () => {
     {
       symbol: 'USDT',
       address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', 
-      decimals: 6
+      decimals: 6,
+      logoUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040'
     },
     {
       symbol: 'ETH',
       address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-      decimals: 18
+      decimals: 18,
+      logoUrl: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
     },
     {
-      symbol: 'MEXA',
+      symbol: 'MEX',
       address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
-      decimals: 6
+      decimals: 6,
+      logoUrl: "/icons/MEXAS.svg"
     },
     {
       symbol: 'WBTC',
       address: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
       decimals: 8,
+      logoUrl: "https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
     }
   ]
 
@@ -357,15 +362,47 @@ export const SwapWidget = () => {
   if (!mounted) return null
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Token Swap</h2>
-      
+    <div className="bg-white rounded-lg p-4 shadow-sm">
       {/* From Token Input */}
-      <div className="mb-4 border rounded-lg p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">De</span>
+      <div className="flex items-center mb-3 bg-gray-50 rounded-lg p-3">
+        <input
+          type="number"
+          placeholder="0.00"
+          className="w-2/3 text-xl outline-none bg-transparent"
+          value={amount}
+          onChange={handleAmountChange}
+          disabled={isSwapping || isApproving || isWaitingForApproval}
+        />
+        
+        <div className="relative ml-auto">
+          <button
+            type="button"
+            className="flex items-center bg-gray-100 rounded-lg px-3 py-2 text-sm font-medium"
+            onClick={() => {
+              // You'll need to implement a dropdown/modal for token selection
+              // This is a placeholder for the dropdown trigger
+              console.log('Open token selection dropdown/modal')
+            }}
+            disabled={isSwapping || isApproving || isWaitingForApproval}
+          >
+            {fromToken && (
+              <>
+                <img 
+                  src={fromToken.logoUrl} 
+                  alt={fromToken.symbol} 
+                  className="w-6 h-6 mr-2 rounded-full"
+                />
+                <span>{fromToken.symbol}</span>
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </>
+            )}
+          </button>
+  
+          {/* Hidden select for maintaining existing functionality */}
           <select 
-            className="bg-gray-100 rounded p-1"
+            className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
             value={fromToken?.address || ''}
             onChange={handleFromTokenChange}
             disabled={isSwapping || isApproving || isWaitingForApproval}
@@ -377,33 +414,62 @@ export const SwapWidget = () => {
             ))}
           </select>
         </div>
-        <input
-          type="number"
-          placeholder="0.0"
-          className="w-full text-2xl outline-none"
-          value={amount}
-          onChange={handleAmountChange}
-          disabled={isSwapping || isApproving || isWaitingForApproval}
-        />
       </div>
       
       {/* Swap Direction Button */}
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center -my-1">
         <button 
-          className="bg-gray-100 p-2 rounded-full hover:bg-gray-200"
+          className="bg-gray-100 p-1 rounded-full hover:bg-gray-200 w-8 h-8 flex items-center justify-center"
           onClick={handleSwapTokens}
           disabled={isSwapping || isApproving || isWaitingForApproval}
         >
-          ⇅
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <polyline points="19 12 12 19 5 12"></polyline>
+          </svg>
         </button>
       </div>
       
       {/* To Token Output */}
-      <div className="mb-4 border rounded-lg p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">A</span>
+      <div className="flex items-center mt-2 mb-3 bg-gray-50 rounded-lg p-3">
+        <div className="w-2/3 text-xl">
+          {loading ? (
+            <span className="text-gray-400">Calculando...</span>
+          ) : quoteAmount ? (
+            quoteAmount
+          ) : (
+            <span className="text-gray-400">0.00</span>
+          )}
+        </div>
+        
+        <div className="relative ml-auto">
+          <button
+            type="button"
+            className="flex items-center bg-gray-100 rounded-lg px-3 py-2 text-sm font-medium"
+            onClick={() => {
+              // You'll need to implement a dropdown/modal for token selection
+              console.log('Open token selection dropdown/modal')
+            }}
+            disabled={isSwapping || isApproving || isWaitingForApproval}
+          >
+            {toToken && (
+              <>
+                <img 
+                  src={toToken.logoUrl} 
+                  alt={toToken.symbol} 
+                  className="w-6 h-6 mr-2 rounded-full" 
+                />
+                <span>{toToken.symbol}</span>
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </>
+            )}
+          </button>
+  
+          {/* Hidden select for maintaining existing functionality */}
           <select 
-            className="bg-gray-100 rounded p-1"
+            className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
             value={toToken?.address || ''}
             onChange={handleToTokenChange}
             disabled={isSwapping || isApproving || isWaitingForApproval}
@@ -415,28 +481,26 @@ export const SwapWidget = () => {
             ))}
           </select>
         </div>
-        <div className="w-full text-2xl">
-          {loading ? 'Loading...' : quoteAmount ? quoteAmount : '0.0'}
-        </div>
       </div>
       
-      {/* Approval Status Display */}
-      {needsApproval && fromToken && fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' && (
-        <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded">
-          Approval needed for {fromToken.symbol}. The swap will execute after approval.
+      {/* Fee display */}
+      {quote && (
+        <div className="flex justify-between items-center text-xs text-gray-500 mb-3 px-2">
+          <span>Incluye comisiones</span>
+          <span>Estimado: ~30 segundos</span>
         </div>
       )}
       
       {/* Error Display */}
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+        <div className="mb-3 p-2 bg-gray-100 text-gray-700 rounded-lg text-sm">
           {error}
         </div>
       )}
-
+  
       {/* Swap Action Button */}
       <button
-        className="w-full bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-300"
+        className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium disabled:bg-gray-300 disabled:text-gray-500"
         onClick={handleSwapButtonClick}
         disabled={isSwapping || isApproving || isWaitingForApproval || loading || !amount || !quoteAmount}
       >
@@ -444,14 +508,9 @@ export const SwapWidget = () => {
       </button>
       
       {/* Transaction Status */}
-      {(isApproving || isWaitingForApproval) && (
-        <p className="text-sm text-center mt-2 text-gray-600">
+      {(isApproving || isWaitingForApproval || isSwapping) && (
+        <p className="text-xs text-center mt-2 text-gray-500">
           Por favor confirma la transacción en tu wallet...
-        </p>
-      )}
-      {isSwapping && (
-        <p className="text-sm text-center mt-2 text-gray-600">
-          Por favor confirma el swap en tu wallet...
         </p>
       )}
     </div>

@@ -8,7 +8,7 @@ import { WalletBalance } from './WalletBalance'
 import { useState } from 'react'
 
 const tabs = [
-  { id: 'transactions', label: 'Historial', icon: "/icons/Timer.svg" },
+  { id: 'transactions', label: 'Historial', icon: "/icons/Vector.svg" },
   { id: 'dispersions', label: 'Dispersiones', icon: "/icons/Payments.svg" },
   { id: 'swap', label: 'Cambios', icon: "/icons/SwapVertical.svg" },
   { id: 'earn', label: 'Ahorro', icon: "/icons/Wallet.svg" },
