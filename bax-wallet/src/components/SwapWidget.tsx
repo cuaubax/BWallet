@@ -21,6 +21,7 @@ interface Token {
   symbol: string
   address: string
   decimals: number
+  logoUrl: string
 }
 
 export const SwapWidget = () => {
@@ -46,22 +47,26 @@ export const SwapWidget = () => {
     {
       symbol: 'USDT',
       address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', 
-      decimals: 6
+      decimals: 6,
+      logoUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040'
     },
     {
       symbol: 'ETH',
       address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-      decimals: 18
+      decimals: 18,
+      logoUrl: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
     },
     {
-      symbol: 'MEXA',
+      symbol: 'MEX',
       address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
-      decimals: 6
+      decimals: 6,
+      logoUrl: "/icons/MEXAS.svg"
     },
     {
       symbol: 'WBTC',
       address: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
       decimals: 8,
+      logoUrl: "https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
     }
   ]
 
@@ -357,86 +362,163 @@ export const SwapWidget = () => {
   if (!mounted) return null
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Token Swap</h2>
-      
+    <div className="bg-sectionBackground rounded-xl p-5 shadow-sm border border-gray-100">
       {/* From Token Input */}
-      <div className="mb-4 border rounded-lg p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">De</span>
-          <select 
-            className="bg-gray-100 rounded p-1"
-            value={fromToken?.address || ''}
-            onChange={handleFromTokenChange}
-            disabled={isSwapping || isApproving || isWaitingForApproval}
-          >
-            {tokensList.map((token) => (
-              <option key={`from-${token.address}`} value={token.address}>
-                {token.symbol}
-              </option>
-            ))}
-          </select>
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-500 font-medium">De</span>
         </div>
-        <input
-          type="number"
-          placeholder="0.0"
-          className="w-full text-2xl outline-none"
-          value={amount}
-          onChange={handleAmountChange}
-          disabled={isSwapping || isApproving || isWaitingForApproval}
-        />
+        
+        <div className="flex items-center bg-itemBackground rounded-xl p-4 border border-transparent focus-within:border-gray-200">
+          <input
+            type="number"
+            placeholder="0.00"
+            className="w-2/3 text-2xl font-bold outline-none bg-transparent"
+            value={amount}
+            onChange={handleAmountChange}
+            disabled={isSwapping || isApproving || isWaitingForApproval}
+          />
+          
+          <div className="relative ml-auto">
+            <button
+              type="button"
+              className="flex items-center space-x-2 bg-white rounded-xl px-3 py-2 text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors"
+              disabled={isSwapping || isApproving || isWaitingForApproval}
+            >
+              {fromToken && (
+                <>
+                  <img 
+                    src={fromToken.logoUrl} 
+                    alt={fromToken.symbol} 
+                    className="w-6 h-6 rounded-full" 
+                  />
+                  <span className="font-medium">{fromToken.symbol}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </>
+              )}
+            </button>
+  
+            {/* Hidden select for maintaining existing functionality */}
+            <select 
+              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+              value={fromToken?.address || ''}
+              onChange={handleFromTokenChange}
+              disabled={isSwapping || isApproving || isWaitingForApproval}
+            >
+              {tokensList.map((token) => (
+                <option key={`from-${token.address}`} value={token.address}>
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
       
       {/* Swap Direction Button */}
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center -my-2 mb-2">
         <button 
-          className="bg-gray-100 p-2 rounded-full hover:bg-gray-200"
+          className="bg-white p-2 rounded-full hover:bg-gray-50 border border-gray-200 w-10 h-10 flex items-center justify-center z-10 shadow-sm transition-transform hover:scale-105"
           onClick={handleSwapTokens}
           disabled={isSwapping || isApproving || isWaitingForApproval}
         >
-          ⇅
+          <svg xmlns="/icons/SwapVertical.svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <polyline points="19 12 12 19 5 12"></polyline>
+          </svg>
         </button>
       </div>
       
       {/* To Token Output */}
-      <div className="mb-4 border rounded-lg p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-600">A</span>
-          <select 
-            className="bg-gray-100 rounded p-1"
-            value={toToken?.address || ''}
-            onChange={handleToTokenChange}
-            disabled={isSwapping || isApproving || isWaitingForApproval}
-          >
-            {tokensList.map((token) => (
-              <option key={`to-${token.address}`} value={token.address}>
-                {token.symbol}
-              </option>
-            ))}
-          </select>
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-500 font-medium">A</span>
         </div>
-        <div className="w-full text-2xl">
-          {loading ? 'Loading...' : quoteAmount ? quoteAmount : '0.0'}
+        
+        <div className="flex items-center bg-itemBackground rounded-xl p-4 border border-transparent">
+          <div className="w-2/3 text-2xl font-bold">
+            {loading ? (
+              <span className="text-gray-400">Calculando...</span>
+            ) : quoteAmount ? (
+              quoteAmount
+            ) : (
+              <span className="text-gray-400">0.00</span>
+            )}
+          </div>
+          
+          <div className="relative ml-auto">
+            <button
+              type="button"
+              className="flex items-center space-x-2 bg-white rounded-xl px-3 py-2 text-sm font-medium border border-gray-200 hover:bg-gray-50 transition-colors"
+              disabled={isSwapping || isApproving || isWaitingForApproval}
+            >
+              {toToken && (
+                <>
+                  <img 
+                    src={toToken.logoUrl} 
+                    alt={toToken.symbol} 
+                    className="w-6 h-6 rounded-full" 
+                  />
+                  <span className="font-medium">{toToken.symbol}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </>
+              )}
+            </button>
+  
+            {/* Hidden select for maintaining existing functionality */}
+            <select 
+              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+              value={toToken?.address || ''}
+              onChange={handleToTokenChange}
+              disabled={isSwapping || isApproving || isWaitingForApproval}
+            >
+              {tokensList.map((token) => (
+                <option key={`to-${token.address}`} value={token.address}>
+                  {token.symbol}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
       
-      {/* Approval Status Display */}
-      {needsApproval && fromToken && fromToken.address.toLowerCase() !== '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' && (
-        <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded">
-          Approval needed for {fromToken.symbol}. The swap will execute after approval.
+      {/* Fee display */}
+      {quote && (
+        <div className="flex justify-between items-center text-xs text-gray-500 mb-4 px-1">
+          <div className="flex items-center">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Sin incluir comisiones de la red</span>
+          </div>
+          <div className="flex items-center">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>~30 segundos</span>
+          </div>
         </div>
       )}
       
       {/* Error Display */}
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-          {error}
+        <div className="mb-4 p-3 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium border border-gray-200">
+          <div className="flex items-center">
+            <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
         </div>
       )}
-
+  
       {/* Swap Action Button */}
       <button
-        className="w-full bg-blue-500 text-white py-2 px-4 rounded disabled:bg-gray-300"
+        className="w-full bg-black text-white py-3.5 px-4 rounded-xl font-medium disabled:bg-gray-200 disabled:text-gray-400 transition-colors"
         onClick={handleSwapButtonClick}
         disabled={isSwapping || isApproving || isWaitingForApproval || loading || !amount || !quoteAmount}
       >
@@ -444,15 +526,14 @@ export const SwapWidget = () => {
       </button>
       
       {/* Transaction Status */}
-      {(isApproving || isWaitingForApproval) && (
-        <p className="text-sm text-center mt-2 text-gray-600">
-          Por favor confirma la transacción en tu wallet...
-        </p>
-      )}
-      {isSwapping && (
-        <p className="text-sm text-center mt-2 text-gray-600">
-          Por favor confirma el swap en tu wallet...
-        </p>
+      {(isApproving || isWaitingForApproval || isSwapping) && (
+        <div className="flex items-center justify-center mt-3 text-xs text-gray-500">
+          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Por favor confirma la transacción en tu wallet...</span>
+        </div>
       )}
     </div>
   )
