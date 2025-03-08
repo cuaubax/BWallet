@@ -20,28 +20,44 @@ export const Layout = () => {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r p-6">
-        <div className="flex flex-col space-y-6">
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold">BaxB Wallet</span>
-          </div>
-          <nav className="flex flex-col space-y-2">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors
-                  ${activeTab === tab.id 
-                    ? 'bg-blue-100 text-blue-600' 
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-              >
-                <img src={tab.icon} alt={tab.label} className="h-6 w-6 mr-2" />
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+<aside className="w-64 bg-white shadow-sm border-r border-gray-100 py-6">
+  <div className="flex flex-col h-full">
+    {/* Logo */}
+    <div className="px-6 mb-8">
+      <span className="text-xl font-bold">BaxB Wallet</span>
+    </div>
+    
+    {/* Navigation */}
+    <nav className="bg-sectionBackground flex-1 px-4">
+      <div className="space-y-1">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-150 ease-in-out
+              ${activeTab === tab.id 
+                ? 'bg-itemBackground text-black  shadow-sm' 
+                : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <div className={`flex items-center justify-center w-8 h-8 ${activeTab === tab.id ? 'opacity-100' : 'opacity-70'}`}>
+              <img src={tab.icon} alt={tab.label} className="h-5 w-5" />
+            </div>
+            <span className="ml-3">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+    
+    {/* Optional: Bottom section for additional links/info */}
+    <div className="mt-auto px-6">
+      <div className="pt-4 border-t border-gray-100">
+        <div className="flex items-center text-xs text-gray-500">
+          <span>© 2025 BaxB</span>
         </div>
-      </aside>
+      </div>
+    </div>
+  </div>
+</aside>
 
       {/* Main Area */}
       <main className="flex-1 p-8 bg-white">

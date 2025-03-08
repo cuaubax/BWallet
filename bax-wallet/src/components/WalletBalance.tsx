@@ -100,90 +100,99 @@ export const WalletBalance = () => {
     if (!isConnected) return null
   
     return (
-      <div className="bg-sectionBackground rounded-lg p-6 mb-8">
+      <div className="bg-sectionBackground rounded-xl p-5 shadow-sm border border-gray-100 mb-8">
         {/* Header with title and wallet link */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <button
-            onClick={() => window.open(walletURL, '_blank')}
-            className="bg-black hover:bg-gray-900 text-white font-medium px-3 py-2 rounded-lg shadow flex items-center space-x-2"
+              onClick={() => window.open(walletURL, '_blank')}
+              className="text-xl font-semibold flex items-center hover:text-gray-700 transition-colors"
             >
-              <span className="text-2xl font-bold">Balances</span>
+              <span>Balances</span>
+              <svg className="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
             </button>
           </div>
           <button
-          className="bg-white border border-black hover:bg-gray-100 text-black font-medium px-4 py-2 rounded-lg shadow flex items-center space-x-2"
-          onClick={() => window.open('https://paywithmoon.com/', '_blank')}
+            className="bg-white border border-gray-200 hover:bg-gray-50 text-black font-medium px-4 py-2 rounded-xl shadow-sm flex items-center space-x-2 transition-colors"
+            onClick={() => window.open('https://paywithmoon.com/', '_blank')}
           >
             <img
-            src="/icons/Card.svg"
-            alt=""
-            className="h-5 w-5"
+              src="/icons/Card.svg"
+              alt=""
+              className="h-5 w-5"
             />
             <span>Fondear Tarjeta</span>
-            </button>
+          </button>
         </div>
-
-  
-        <div className="space-y-4">
-
+    
+        <div className="space-y-3">
           {/* MEXA */}
-          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
             <div className="flex items-center space-x-3">
-              <img
-                src="/icons/MEXAS.svg"
-                alt="MEXA"
-                className="h-8 w-8"
-              />
-              <span className="font-semibold">MEX</span>
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+                <img
+                  src="/icons/MEXAS.svg"
+                  alt="MEXA"
+                  className="h-7 w-7"
+                />
+              </div>
+              <span className="font-medium">MEX</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceWETH ? balanceWETH : '—'} 
+              {balanceWETH ? parseFloat(balanceWETH).toFixed(4) : '—'} 
             </span>
           </div>
-
-          {/* Native Token (e.g., MATIC for Polygon) */}
-          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
+    
+          {/* Native Token (e.g., ETH) */}
+          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
             <div className="flex items-center space-x-3">
-              <img
-                src="https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
-                alt="ETH"
-                className="h-8 w-8"
-              />
-              <span className="font-semibold">ETH</span>
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+                <img
+                  src="https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
+                  alt="ETH"
+                  className="h-7 w-7"
+                />
+              </div>
+              <span className="font-medium">ETH</span>
             </div>
             <span className="font-bold text-lg">
-              {balance?.formatted}
+              {balance?.formatted ? parseFloat(balance.formatted).toFixed(4) : '—'}
             </span>
           </div>
-
+    
           {/* WBTC */}
-          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
             <div className="flex items-center space-x-3">
-              <img
-                src="https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
-                alt="WBTC"
-                className="h-8 w-8"
-              />
-              <span className="font-semibold">WBTC</span>
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+                <img
+                  src="https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
+                  alt="WBTC"
+                  className="h-7 w-7"
+                />
+              </div>
+              <span className="font-medium">WBTC</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceWBTC ? balanceWBTC : '—'} 
+              {balanceWBTC ? parseFloat(balanceWBTC).toFixed(4) : '—'} 
             </span>
           </div>
-  
+    
           {/* USDT */}
-          <div className="bg-itemBackground rounded-lg p-4 flex items-center justify-between">
+          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
             <div className="flex items-center space-x-3">
-              <img
-                src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
-                alt="USDT"
-                className="h-8 w-8"
-              />
-              <span className="font-semibold">USDT</span>
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+                <img
+                  src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
+                  alt="USDT"
+                  className="h-7 w-7"
+                />
+              </div>
+              <span className="font-medium">USDT</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceUSDC ? balanceUSDC : '—'} 
+              {balanceUSDC ? parseFloat(balanceUSDC).toFixed(4) : '—'} 
             </span>
           </div>
         </div>
