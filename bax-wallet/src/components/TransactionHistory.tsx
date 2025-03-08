@@ -110,8 +110,13 @@ export const TransactionHistory = () => {
 
   if (!mounted || !isConnected) return null
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
   return (
-    <div className="bg-sectionBackground rounded-xl p-5 shadow-sm border">
+    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
       <h2 className="text-xl font-semibold mb-6">Historial de Transacciones</h2>
       
       {loading ? (
@@ -123,77 +128,76 @@ export const TransactionHistory = () => {
           <span className="ml-2 text-gray-500">Cargando transacciones...</span>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left border-b border-gray-200">
-                <th className="pb-3 text-xs text-gray-500 font-medium">Tipo</th>
-                <th className="pb-3 text-xs text-gray-500 font-medium">Dirección</th>
-                <th className="pb-3 text-xs text-gray-500 font-medium text-center">Monto</th>
-                <th className="pb-3 text-xs text-gray-500 font-medium text-center">Token</th>
-                <th className="pb-3 text-xs text-gray-500 font-medium text-center">Tx Hash</th>
-                <th className="pb-3 text-xs text-gray-500 font-medium text-right">Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allTransactions.length > 0 ? (
-                allTransactions.map((tx) => (
-                  <tr key={tx.uniqueId} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                    <td className="py-4">
-                      {tx.type === 'sent' ? (
-                        <div className="flex items-center space-x-2">
-                          <img src="/icons/Send.svg" alt="Enviada" className="h-5 w-5" />
-                          <span className="text-sm font-medium">Enviada</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2">
-                          <img src="/icons/Receive.svg" alt="Recibida" className="h-5 w-5" />
-                          <span className="text-sm font-medium">Recibida</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-4">
-                      <a 
-                        href={tx.type === 'sent' 
-                          ? getExplorerUrlAddress(chainId, tx.to || '') 
-                          : getExplorerUrlAddress(chainId, tx.from || '')
-                        } 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm hover:underline"
-                      >
-                        {tx.type === 'sent' 
-                          ? (tx.to ? `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}` : '')
-                          : (tx.from ? `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}` : '')
-                        }
-                      </a>
-                    </td>
-                    <td className="py-4 text-center text-sm font-medium">{tx.value}</td>
-                    <td className="py-4 text-center text-sm">{tx.asset}</td>
-                    <td className="py-4 text-center">
-                      <a 
-                        href={getTxUrl(chainId, tx.hash)} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-gray-600 hover:text-black hover:underline"
-                      >
-                        {tx.hash?.slice(0, 10)}...
-                      </a>
-                    </td>
-                    <td className="py-4 text-right text-sm text-gray-600">
-                      {new Date(tx.metadata.blockTimestamp).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="text-gray-500 text-center py-8">
-                    No hay transacciones para mostrar
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {allTransactions.length > 0 ? (
+            allTransactions.map((tx) => (
+              <div key={tx.uniqueId} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
+                <div className="flex items-start justify-between">
+                  {/* Left side - Type and Address */}
+                  <div className="flex items-start space-x-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'sent' ? 'bg-gray-200' : 'bg-gray-200'}`}>
+                      <img 
+                        src={tx.type === 'sent' ? "/icons/Send.svg" : "/icons/Receive.svg"} 
+                        alt={tx.type === 'sent' ? "Enviada" : "Recibida"} 
+                        className="h-5 w-5" 
+                      />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">
+                        {tx.type === 'sent' ? 'Enviada' : 'Recibida'}
+                      </div>
+                      <div className="mt-1 text-sm text-gray-500">
+                        {tx.type === 'sent' ? 'Para:' : 'De:'} 
+                        <a 
+                          href={tx.type === 'sent' 
+                            ? getExplorerUrlAddress(chainId, tx.to || '') 
+                            : getExplorerUrlAddress(chainId, tx.from || '')
+                          } 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="ml-1 text-gray-700 hover:text-black hover:underline"
+                        >
+                          {tx.type === 'sent' 
+                            ? (tx.to ? `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}` : '')
+                            : (tx.from ? `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}` : '')
+                          }
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Right side - Amount and Token */}
+                  <div className="text-right">
+                    <div className="font-bold">{tx.value}</div>
+                    <div className="text-sm text-gray-500">{tx.asset}</div>
+                  </div>
+                </div>
+                
+                {/* Bottom section - Hash and Date */}
+                <div className="flex justify-between mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                  <a 
+                    href={getTxUrl(chainId, tx.hash)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center hover:text-black"
+                  >
+                    <span>Tx: {tx.hash?.slice(0, 10)}...</span>
+                    <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                  <span>{formatDate(tx.metadata.blockTimestamp)}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-xl">
+              <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="mt-3 text-gray-500">No hay transacciones para mostrar</p>
+            </div>
+          )}
         </div>
       )}
     </div>
