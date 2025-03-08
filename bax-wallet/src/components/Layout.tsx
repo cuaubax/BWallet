@@ -20,7 +20,7 @@ export const Layout = () => {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-<aside className="w-64 bg-white shadow-sm border-r border-gray-100 py-6">
+<aside className="w-64 bg-sectionBackground shadow-sm border-r border-gray-100 py-6">
   <div className="flex flex-col h-full">
     {/* Logo */}
     <div className="px-6 mb-8">

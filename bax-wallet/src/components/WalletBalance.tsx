@@ -141,7 +141,7 @@ export const WalletBalance = () => {
               <span className="font-medium">MEX</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceWETH ? parseFloat(balanceWETH).toFixed(4) : '—'} 
+              {balanceWETH ? balanceWETH: '—'} 
             </span>
           </div>
     
@@ -158,7 +158,7 @@ export const WalletBalance = () => {
               <span className="font-medium">ETH</span>
             </div>
             <span className="font-bold text-lg">
-              {balance?.formatted ? parseFloat(balance.formatted).toFixed(4) : '—'}
+              {balance?.formatted}
             </span>
           </div>
     
@@ -175,7 +175,7 @@ export const WalletBalance = () => {
               <span className="font-medium">WBTC</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceWBTC ? parseFloat(balanceWBTC).toFixed(4) : '—'} 
+              {balanceWBTC ? balanceWBTC : '—'} 
             </span>
           </div>
     
@@ -192,7 +192,7 @@ export const WalletBalance = () => {
               <span className="font-medium">USDT</span>
             </div>
             <span className="font-bold text-lg">
-              {balanceUSDC ? parseFloat(balanceUSDC).toFixed(4) : '—'} 
+              {balanceUSDC ? balanceUSDC : '—'}
             </span>
           </div>
         </div>
