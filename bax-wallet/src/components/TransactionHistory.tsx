@@ -116,7 +116,7 @@ export const TransactionHistory = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+    <div className="bg-sectionBackground rounded-xl p-5 shadow-sm border border-gray-100">
       <h2 className="text-xl font-semibold mb-6">Historial de Transacciones</h2>
       
       {loading ? (
@@ -128,77 +128,84 @@ export const TransactionHistory = () => {
           <span className="ml-2 text-gray-500">Cargando transacciones...</span>
         </div>
       ) : (
-        <div className="space-y-4">
-          {allTransactions.length > 0 ? (
-            allTransactions.map((tx) => (
-              <div key={tx.uniqueId} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                <div className="flex items-start justify-between">
-                  {/* Left side - Type and Address */}
-                  <div className="flex items-start space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.type === 'sent' ? 'bg-gray-200' : 'bg-gray-200'}`}>
-                      <img 
-                        src={tx.type === 'sent' ? "/icons/Send.svg" : "/icons/Receive.svg"} 
-                        alt={tx.type === 'sent' ? "Enviada" : "Recibida"} 
-                        className="h-5 w-5" 
-                      />
-                    </div>
-                    <div>
-                      <div className="font-medium text-sm">
-                        {tx.type === 'sent' ? 'Enviada' : 'Recibida'}
-                      </div>
-                      <div className="mt-1 text-sm text-gray-500">
-                        {tx.type === 'sent' ? 'Para:' : 'De:'} 
-                        <a 
-                          href={tx.type === 'sent' 
-                            ? getExplorerUrlAddress(chainId, tx.to || '') 
-                            : getExplorerUrlAddress(chainId, tx.from || '')
-                          } 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="ml-1 text-gray-700 hover:text-black hover:underline"
-                        >
-                          {tx.type === 'sent' 
-                            ? (tx.to ? `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}` : '')
-                            : (tx.from ? `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}` : '')
-                          }
-                        </a>
-                      </div>
-                    </div>
+        <div>
+        <div className="flex items-center justify-between px-3 py-2 mb-2">
+    <div className="w-1/5 text-xs text-gray-500 font-medium">Tipo</div>
+    <div className="w-1/5 text-xs text-gray-500 font-medium">Dirección</div>
+    <div className="w-1/5 text-xs text-gray-500 font-medium text-center">Monto</div>
+    <div className="w-1/5 text-xs text-gray-500 font-medium text-center">Tx Hash</div>
+    <div className="w-1/5 text-xs text-gray-500 font-medium text-right">Fecha</div>
+  </div>
+      <div className="space-y-3">
+        {allTransactions.length > 0 ? (
+          allTransactions.map((tx) => (
+            <div key={tx.uniqueId} className="bg-itemBackground rounded-xl p-3 hover:bg-gray-100 transition-colors">
+              <div className="flex items-center justify-between">
+                {/* Type Icon & Type */}
+                <div className="flex items-center space-x-3 w-1/5">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                    <img 
+                      src={tx.type === 'sent' ? "/icons/Send.svg" : "/icons/Receive.svg"} 
+                      alt={tx.type === 'sent' ? "Enviada" : "Recibida"} 
+                      className="h-4 w-4" 
+                    />
                   </div>
-                  
-                  {/* Right side - Amount and Token */}
-                  <div className="text-right">
-                    <div className="font-bold">{tx.value}</div>
-                    <div className="text-sm text-gray-500">{tx.asset}</div>
-                  </div>
+                  <span className="font-medium text-sm">{tx.type === 'sent' ? 'Enviada' : 'Recibida'}</span>
                 </div>
                 
-                {/* Bottom section - Hash and Date */}
-                <div className="flex justify-between mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                {/* Address */}
+                <div className="w-1/5 text-sm">
+                  <a 
+                    href={tx.type === 'sent' 
+                      ? getExplorerUrlAddress(chainId, tx.to || '') 
+                      : getExplorerUrlAddress(chainId, tx.from || '')
+                    } 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-gray-700 hover:text-black hover:underline"
+                  >
+                    {tx.type === 'sent' 
+                      ? (tx.to ? `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}` : '')
+                      : (tx.from ? `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}` : '')
+                    }
+                  </a>
+                </div>
+                
+                {/* Amount & Token */}
+                <div className="w-1/5 text-center">
+                  <span className="font-bold text-sm">{tx.value}</span>
+                  <span className="text-sm text-gray-600 ml-1">{tx.asset}</span>
+                </div>
+                
+                {/* Hash */}
+                <div className="w-1/5 text-center">
                   <a 
                     href={getTxUrl(chainId, tx.hash)} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center hover:text-black"
+                    className="text-sm text-gray-600 hover:text-black flex items-center justify-center"
                   >
-                    <span>Tx: {tx.hash?.slice(0, 10)}...</span>
+                    <span>{tx.hash?.slice(0, 10)}...</span>
                     <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </a>
-                  <span>{formatDate(tx.metadata.blockTimestamp)}</span>
+                </div>
+                
+                {/* Date */}
+                <div className="w-1/5 text-right text-sm text-gray-500">
+                  {formatDate(tx.metadata.blockTimestamp)}
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-12 bg-gray-50 rounded-xl">
-              <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="mt-3 text-gray-500">No hay transacciones para mostrar</p>
             </div>
-          )}
-        </div>
+          ))
+        ) : (
+          <div className="text-center py-8 bg-gray-50 rounded-xl">
+            <p className="text-gray-500">No hay transacciones para mostrar</p>
+          </div>
+        )}
+      </div>
+      </div>
       )}
     </div>
   )
