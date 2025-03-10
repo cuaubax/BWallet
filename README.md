@@ -1,12 +1,44 @@
-# BaxBWallet
+# Bax Business Decentralizado
 
-Works well as a POC
+## Requisitos
 
-## One to many test txs
-- [Eth](https://sepolia.etherscan.io/tx/0x95b0295ce35157f22ced8694ef381f96efaa61b1c2286640da5fdf592b81ee47)
-- [USDC](https://sepolia.etherscan.io/tx/0xf58cff1a90928498f0032861387e2bf73054cabf80400f2abbc0e5f769955a70)
+- Node.js
+- wallet (metamask o similar) con un poco de eth en Arbitrum
+- API key para 0x (dm para que la comparta)
 
-Custom made SC, not a good idea to use in prod
+## Corriendo en local
+
+### El repo
+
+```bash
+git clone git@github.com:cuaubax/BWallet.git
+
+```
+
+### Acceder al directorio del proyecto
+
+```bash
+cd BaxBWallet; cd bax-wallet
+
+```
+
+### Correr en modo dev 
+
+```bash
+npm run dev
+
+```
+
+Con eso debería de verse el proyecto en [localhost:3000](http://localhost:3000) a menos que el puerto esté ocupado, en ese caso se usará otro disponible. 
+
+NOTA: Es necesario conectarse con metamask para poder ver el sitio completo. De lo contrario no muestra nada.
+
+## Adding a new chain (??)
+
+- Must add new chain in both `src/config/alchemy.tx` and `src/config/web3.ts`
+- Add block explorer urls in `src/components/WalletBalance.tsx` and `src/components/TransactionHistory.tsx`
+
+Could be done in a cleaner more centralized way. Considereing the current scope of the project, this approach is fine.
 
 ## TODO 
 
