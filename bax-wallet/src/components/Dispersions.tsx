@@ -340,7 +340,7 @@ export const BatchTransfer = () => {
         {recipients.length > 0 && (
           <div className="mb-5 bg-gray-50 rounded-xl p-4 border border-gray-200">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Recipientes:</span>
+              <span className="text-sm font-medium">Destinatarios:</span>
               <span className="text-sm font-bold">{recipients.length}</span>
             </div>
             <div className="flex justify-between items-center mt-2">
