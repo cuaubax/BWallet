@@ -233,6 +233,130 @@ export const AaveComponent = () => {
   const [balanceUSDC, setBalanceUSDC] = useState<string | null>(null)
   const [currentTxType, setCurrentTxType] = useState<'none' | 'approval' | 'main'>('none')
 
+  // Add these state variables to track the fake token
+  const [fakeMexBalance, setFakeMexBalance] = useState<string>("123.45") 
+  const [fakeMexDeposited, setFakeMexDeposited] = useState<string>("678.90")
+  const [fakeMexProcessing, setFakeMexProcessing] = useState<boolean>(false)
+  const [fakeMexTxHash, setFakeMexTxHash] = useState<string | null>(null)
+
+  const [currentToken, setCurrentToken] = useState<'USDT' | 'MEX'>('USDT')
+
+  // Function to open deposit modal for MEX token
+function openMexSupplyModal() {
+  setIsWithdraw(false)
+  setAmount('')
+  setShowModal(true)
+  setError(null)
+  // Flag to indicate we're using the fake token
+  setCurrentToken('MEX')
+}
+
+// Function to open withdraw modal for MEX token
+function openMexWithdrawModal() {
+  setIsWithdraw(true)
+  setAmount('')
+  setShowModal(true)
+  setError(null)
+  // Flag to indicate we're using the fake token
+  setCurrentToken('MEX')
+}
+
+const handleMexDeposit = async () => {
+  if (!amount || parseFloat(amount) <= 0) {
+    setError('Por favor ingresa un monto válido')
+    return
+  }
+  
+  // Check if user has enough balance
+  if (parseFloat(amount) > parseFloat(fakeMexBalance)) {
+    setError('Balance insuficiente')
+    return
+  }
+  
+  try {
+    setFakeMexProcessing(true)
+    setError(null)
+    
+    // Generate a fake transaction hash
+    const fakeHash = '0x' + Array(64).fill(0).map(() => 
+      Math.floor(Math.random() * 16).toString(16)).join('')
+    setFakeMexTxHash(fakeHash)
+    
+    // Simulate transaction processing time
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Update balances
+    const newBalance = (parseFloat(fakeMexBalance) - parseFloat(amount)).toFixed(2)
+    const newDeposited = (parseFloat(fakeMexDeposited) + parseFloat(amount)).toFixed(2)
+    
+    setFakeMexBalance(newBalance)
+    setFakeMexDeposited(newDeposited)
+    
+    // Show success for a moment
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    setFakeMexProcessing(false)
+    setFakeMexTxHash(null)
+    setShowModal(false)
+    setAmount('')
+    setError(null)
+  } catch (error) {
+    console.error('Transaction failed:', error)
+    setError('La transacción falló. Por favor intenta de nuevo.')
+    setFakeMexProcessing(false)
+    setFakeMexTxHash(null)
+  }
+}
+
+const handleMexWithdraw = async () => {
+  if (!amount || parseFloat(amount) <= 0) {
+    setError('Por favor ingresa un monto válido')
+    return
+  }
+  
+  // Check if user has enough deposited
+  if (parseFloat(amount) > parseFloat(fakeMexDeposited)) {
+    setError('Monto depositado insuficiente')
+    return
+  }
+  
+  try {
+    setFakeMexProcessing(true)
+    setError(null)
+    
+    // Generate a fake transaction hash
+    const fakeHash = '0x' + Array(64).fill(0).map(() => 
+      Math.floor(Math.random() * 16).toString(16)).join('')
+    setFakeMexTxHash(fakeHash)
+    
+    // Simulate transaction processing time
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Update balances
+    const newBalance = (parseFloat(fakeMexBalance) + parseFloat(amount)).toFixed(2)
+    const newDeposited = (parseFloat(fakeMexDeposited) - parseFloat(amount)).toFixed(2)
+    
+    setFakeMexBalance(newBalance)
+    setFakeMexDeposited(newDeposited)
+    
+    // Show success for a moment
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Reset state and close modal
+    setFakeMexProcessing(false)
+    setFakeMexTxHash(null)
+    setShowModal(false)
+    setAmount('')
+    setError(null)
+  } catch (error) {
+    console.error('Transaction failed:', error)
+    setError('La transacción falló. Por favor intenta de nuevo.')
+    setFakeMexProcessing(false)
+    setFakeMexTxHash(null)
+  }
+}
+
+
   const { data: balanceAPolUSDCData, refetch: refetchAPolUSDC} = useReadContracts({
     contracts: [
       {
@@ -260,6 +384,7 @@ export const AaveComponent = () => {
     setAmount('')
     setShowModal(true)
     setError(null)
+    setCurrentToken("USDT")
   }
 
   function openWithdrawModal() {
@@ -267,6 +392,7 @@ export const AaveComponent = () => {
     setAmount('')
     setShowModal(true)
     setError(null)
+    setCurrentToken("USDT")
   }
 
   const { data, isLoading, error: errorData, isLoading: loadingReserves, refetch: refetchReservesData } = useReadContract({
@@ -500,16 +626,47 @@ export const AaveComponent = () => {
     setError(null)
   }
 
+  /*
   const getButtonText = () => {
     if (waitingForApproval) return 'Aprobando...'
     if (isProcessing) return isWithdraw ? 'Retirando...' : 'Depositando...'
     if (needsApproval) return 'Aprueba & Deposita'
     return isWithdraw ? 'Retira' : 'Deposita'
   }
+  */
 
+  const getButtonText = () => {
+    if (currentToken === 'MEX') {
+      if (fakeMexProcessing) return isWithdraw ? 'Retirando...' : 'Depositando...'
+      return isWithdraw ? 'Retira' : 'Deposita'
+    } else {
+      // Original AAVE logic
+      if (waitingForApproval) return 'Aprobando...'
+      if (isProcessing) return isWithdraw ? 'Retirando...' : 'Depositando...'
+      if (needsApproval) return 'Aprueba & Deposita'
+      return isWithdraw ? 'Retira' : 'Deposita'
+    }
+  }
+
+  /*
   const handleConfirm = async () => {
     await proceedWithTransaction(true)
   }
+    */
+
+  const handleConfirm = async () => {
+    if (currentToken === 'MEX') {
+      if (isWithdraw) {
+        await handleMexWithdraw()
+      } else {
+        await handleMexDeposit()
+      }
+    } else {
+      // Original AAVE logic
+      await proceedWithTransaction(true)
+    }
+  }
+  
 
   const profitPlaceholder = '0.00'
   
@@ -533,28 +690,33 @@ export const AaveComponent = () => {
             <td className="py-4 pl-3 bg-gray-50 rounded-l-xl">
               <div className="flex items-center">
                 <img
-                  src="/icons/MEXAS.svg"
-                  alt="Placeholder"
-                  className="h-6 w-6 mr-2 rounded-full"
+                src="/icons/MEXAS.svg"
+                alt="Placeholder"
+                className="h-6 w-6 mr-2 rounded-full"
                 />
                 <span className="font-medium">MEX</span>
               </div>
             </td>
             <td className="py-4 text-center bg-gray-50">
-              <span className="font-medium">123.45</span>
+              <span className="font-medium">{fakeMexBalance}</span>
             </td>
             <td className="py-4 text-center bg-gray-50">
-              <span className="font-medium">678.90</span>
+              <span className="font-medium">{fakeMexDeposited}</span>
             </td>
             <td className="py-4 text-center bg-gray-50">
               <span className="font-medium">5.67%</span>
             </td>
             <td className="py-4 pr-3 bg-gray-50 rounded-r-xl">
               <div className="flex justify-end space-x-2">
-                <button className="bg-black text-white px-3 py-1.5 rounded-lg text-sm font-medium">
+                <button 
+                className="bg-black text-white px-3 py-1.5 rounded-lg text-sm font-medium"
+                onClick={openMexSupplyModal}>
                   Depositar
                 </button>
-                <button className="bg-white text-black border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium">
+                <button 
+                className="bg-white text-black border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200"
+                onClick={openMexWithdrawModal}
+                disabled={!fakeMexDeposited || parseFloat(fakeMexDeposited) <= 0}>
                   Retirar
                 </button>
               </div>
@@ -623,7 +785,9 @@ export const AaveComponent = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
             <h2 className="text-lg font-semibold mb-5">
-              {isWithdraw ? 'Retira USDT' : 'Deposita USDT'}
+            {isWithdraw 
+            ? `Retira ${currentToken}` 
+            : `Deposita ${currentToken}`}
             </h2>
             
             {/* Amount input with improved styling */}
@@ -632,17 +796,28 @@ export const AaveComponent = () => {
                 <label className="text-sm text-gray-600 font-medium">
                   Monto
                 </label>
-                {isWithdraw && userPosition && (
+                {isWithdraw && (
                   <div className="text-xs text-gray-500">
-                    Disponible: <span className="font-medium">{userPosition} USDT</span>
+                    Disponible: 
+                    <span className="font-medium">
+                      {currentToken === 'MEX' 
+                      ? `${fakeMexDeposited} MEX` 
+                      : `${userPosition} USDT`}
+                    </span>
                   </div>
                 )}
                 {!isWithdraw && (
                   <div className="text-xs text-gray-500">
-                    Disponible: <span className="font-medium">{parseFloat(balanceUSDC!).toFixed(2)} USDT</span>
+                    Disponible: 
+                    <span className="font-medium">
+                      {currentToken === 'MEX' 
+                      ? `${fakeMexBalance} MEX` 
+                      : `${parseFloat(balanceUSDC!).toFixed(2)} USDT`}
+                    </span>
                   </div>
                 )}
               </div>
+
               
               <div className="flex items-center bg-gray-50 rounded-xl p-3 border border-transparent focus-within:border-gray-200">
                 <input
@@ -654,18 +829,24 @@ export const AaveComponent = () => {
                   min="0"
                   max={
                     isWithdraw 
-                      ? Number(userPosition) 
-                      : Number(balanceUSDC)
-                  }          
-                  disabled={isProcessing || waitingForApproval}
+                      ? currentToken === 'MEX'
+                        ? Number(fakeMexDeposited)
+                        : Number(userPosition)
+                      : currentToken === 'MEX'
+                        ? Number(fakeMexBalance)
+                        : Number(balanceUSDC)
+                  }
+                  disabled={isProcessing || waitingForApproval }
                 />
                 <div className="flex items-center space-x-1 ml-2">
                   <img 
-                    src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040" 
-                    alt="USDT" 
+                  src={currentToken === 'MEX' 
+                    ? "/icons/MEXAS.svg" 
+                    : "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"} 
+                    alt={currentToken}
                     className="w-5 h-5 rounded-full" 
-                  />
-                  <span className="font-medium">USDT</span>
+                    />
+                    <span className="font-medium">{currentToken}</span>
                 </div>
               </div>
             </div>
@@ -713,10 +894,11 @@ export const AaveComponent = () => {
                 disabled={
                   !amount || 
                   parseFloat(amount) <= 0 || 
-                  isProcessing || 
-                  waitingForApproval ||
-                  (isWithdraw && !!userPosition && parseFloat(amount) > parseFloat(userPosition))
-                }>
+                  (currentToken === 'USDT' ? (isProcessing || waitingForApproval) : fakeMexProcessing) ||
+                  (isWithdraw && (
+                    (currentToken === 'USDT' && !!userPosition && parseFloat(amount) > parseFloat(userPosition)) ||
+                    (currentToken === 'MEX' && parseFloat(amount) > parseFloat(fakeMexDeposited))
+                  ))}>
                 {getButtonText()}
               </button>
             </div>
