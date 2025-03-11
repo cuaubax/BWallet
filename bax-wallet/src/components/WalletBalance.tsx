@@ -2,7 +2,10 @@ import { useAccount, useBalance, useChainId, useReadContracts } from 'wagmi'
 import { useEffect, useState } from 'react'
 import { Address, erc20Abi } from 'viem'
 import { formatUnits } from 'ethers'
-import { emitter } from '../utils/eventBus';
+import { emitter } from '../utils/eventBus'
+import axios from 'axios'
+
+// bitcoin, tether, ethereum
 
 const chainToExplorerUrlAddress: { [chainId: number]: string } = {
   137: "https://polygonscan.com/address/{address}",
@@ -18,12 +21,20 @@ function getExplorerUrl(chainId: number, walletAddress: string): string {
   return urlTemplate ? urlTemplate.replace("{address}", walletAddress) : "";
 }
 
+
 export const WalletBalance = () => {
     const [mounted, setMounted] = useState(false)
     const { address, isConnected } = useAccount()
     const [balanceUSDC, setBalanceUSDC] = useState<string | null>(null)
     const [balanceWETH, setBalanceWETH] = useState<string | null>(null)
     const [balanceWBTC, setBalanceWBTC] = useState<string | null>(null)
+    const [priceWBTC, setPriceWBTC] = useState<string | null>(null)
+    const [priceETH, setPriceETH] = useState<string | null>(null)
+    const [priceUSDT, setPriceUSDT] = useState<string | null>(null)
+    const [valueETH, setValueETH] = useState<string | null>(null)
+    const [valueUSDT, setValueUSDT] = useState<string | null>(null)
+    const [valueWBTC, setValueWBTC] = useState<string | null>(null)
+    const [portfolioValue, setPortfolioValue] = useState<string | null>(null)
     const { data: balance , refetch: refetchNativeBalance} = useBalance({
       address,
     })
@@ -59,16 +70,41 @@ export const WalletBalance = () => {
         }
       ]
     })
+
+    async function getCryptoMXNPrice() {
+      try {
+        const response = await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin%2Ctether%2Cethereum&vs_currencies=mxn&include_market_cap=false&include_24hr_vol=false&include_24hr_change=false&include_last_updated_at=false", 
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-cg-demo-api-key": "CG-fJarKx5YRsi4SPEk1dfKVeik"
+            }
+          }
+        )
+
+        if (response?.data) {
+          setPriceETH(response.data.ethereum?.mxn?.toString() || null)
+          setPriceUSDT(response.data.tether?.mxn?.toString() || null)
+          setPriceWBTC(response.data.bitcoin?.mxn?.toString() || null)
+      }
+      
+      } catch (error) {
+        console.log("Some error")
+      }
+    }
+    
   
     // Prevent hydration errors by only rendering after mount
     useEffect(() => {
       setMounted(true)
+      getCryptoMXNPrice()
     }, [])
 
     useEffect(() => {
       const handleBalanceUpdate = () => {
         refetch()
         refetchNativeBalance()
+        getCryptoMXNPrice()
       }
     
       emitter.on('balanceUpdated', handleBalanceUpdate);
@@ -76,6 +112,19 @@ export const WalletBalance = () => {
         emitter.off('balanceUpdated', handleBalanceUpdate);
       }
     }, [refetch, refetchNativeBalance])
+
+    useEffect(() => {
+      if (priceETH && priceUSDT && priceWBTC && balance && balanceUSDC && balanceWBTC && balanceWETH) {
+        const valueETH = parseFloat(priceETH) * parseFloat(balance.formatted)
+        const valueUSDT = parseFloat(priceUSDT) * parseFloat(balanceUSDC)
+        const valueWBTC = parseFloat(priceWBTC) * parseFloat(balanceWBTC)
+        const totalPorfolioValue = valueETH + valueUSDT + valueWBTC + parseFloat(balanceWETH)
+        setValueETH(valueETH.toFixed(2).toString())
+        setValueUSDT(valueUSDT.toFixed(2).toString())
+        setValueWBTC(valueWBTC.toFixed(2).toString())
+        setPortfolioValue(totalPorfolioValue.toString())
+      }
+    }, [priceETH, priceUSDT, priceWBTC, balance, balanceUSDC, balanceWBTC, balanceWETH])
 
     useEffect(() => {
       if (!balanceData) {
@@ -95,6 +144,12 @@ export const WalletBalance = () => {
         setBalanceWBTC(formatUnits(rawBalanceWBTC,8))
       }
     }, [balanceData, refetch]);
+
+    useEffect(() => {
+      if (balance && balanceUSDC && balanceWBTC && balanceWETH) {
+
+      }
+    })
   
     if (!mounted) return null
     if (!isConnected) return null
@@ -108,7 +163,9 @@ export const WalletBalance = () => {
               onClick={() => window.open(walletURL, '_blank')}
               className="text-xl font-semibold flex items-center hover:text-gray-700 transition-colors"
             >
-              <span>Balances</span>
+              <span>
+                Balance ≈ {portfolioValue ? Number(portfolioValue).toFixed(2) : "—"} MXN
+              </span>
               <svg className="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -140,8 +197,9 @@ export const WalletBalance = () => {
               </div>
               <span className="font-medium">MEX</span>
             </div>
-            <span className="font-bold text-lg">
-              {balanceWETH ? balanceWETH: '—'} 
+            <span className="text-lg">
+              <span className="font-bold">{balanceWETH ? balanceWETH : "—"}</span> 
+              <span className="text-gray-600"> ≈ {balanceWETH ? balanceWETH : "—"} MXN</span>
             </span>
           </div>
     
@@ -157,8 +215,9 @@ export const WalletBalance = () => {
               </div>
               <span className="font-medium">ETH</span>
             </div>
-            <span className="font-bold text-lg">
-              {balance?.formatted}
+            <span className="text-lg">
+              <span className="font-bold">{balance?.formatted}</span> 
+              <span className="text-gray-600"> ≈ {valueETH ? valueETH : "—"} MXN</span>
             </span>
           </div>
     
@@ -174,8 +233,9 @@ export const WalletBalance = () => {
               </div>
               <span className="font-medium">WBTC</span>
             </div>
-            <span className="font-bold text-lg">
-              {balanceWBTC ? balanceWBTC : '—'} 
+            <span className="text-lg">
+              <span className="font-bold">{balanceWBTC ? balanceWBTC : '—'}</span> 
+              <span className="text-gray-600"> ≈ {valueWBTC ? valueWBTC : "—"} MXN</span>
             </span>
           </div>
     
@@ -191,8 +251,9 @@ export const WalletBalance = () => {
               </div>
               <span className="font-medium">USDT</span>
             </div>
-            <span className="font-bold text-lg">
-              {balanceUSDC ? balanceUSDC : '—'}
+            <span className="text-lg">
+              <span className="font-bold">{balanceUSDC ? balanceUSDC : '—'}</span> 
+              <span className="text-gray-600"> ≈ {valueUSDT ? valueUSDT : "—"} MXN</span>
             </span>
           </div>
         </div>
