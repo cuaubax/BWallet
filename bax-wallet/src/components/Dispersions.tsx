@@ -36,16 +36,16 @@ const ARBITRUM = 42161
 
 const tokensList = [
   {
-    symbol: 'USDT',
-    address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', 
-    decimals: 6,
-    logoUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040'
-  },
-  {
     symbol: 'ETH',
     address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
     decimals: 18,
     logoUrl: "https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
+  },
+  {
+    symbol: 'USDT',
+    address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', 
+    decimals: 6,
+    logoUrl: 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040'
   },
   {
     symbol: 'MEX',
@@ -198,8 +198,9 @@ export const BatchTransfer = () => {
       if (isERC20) {
         // Also needs some work, decimal places will vary form
         // token to token and from chain to chain
+        const decimals = selectedToken.decimals
         const parsedAmounts = amounts.map(amt =>
-            ethers.parseUnits(amt.trim(), 18).toString()
+            ethers.parseUnits(amt.trim(), decimals).toString()
           )
         
           const totalAmount = parsedAmounts
@@ -339,7 +340,7 @@ export const BatchTransfer = () => {
         {recipients.length > 0 && (
           <div className="mb-5 bg-gray-50 rounded-xl p-4 border border-gray-200">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Recipientes:</span>
+              <span className="text-sm font-medium">Destinatarios:</span>
               <span className="text-sm font-bold">{recipients.length}</span>
             </div>
             <div className="flex justify-between items-center mt-2">

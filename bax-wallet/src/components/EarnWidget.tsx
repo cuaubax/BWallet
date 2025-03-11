@@ -852,7 +852,7 @@ const handleMexWithdraw = async () => {
             </div>
             
             {/* Approval notice */}
-            {needsApproval && !isWithdraw && (
+            {needsApproval && !isWithdraw && currentToken != "MEX" &&(
               <div className="mb-4 p-3 bg-gray-50 rounded-xl text-sm border border-gray-200">
                 <div className="flex items-start">
                   <svg className="w-5 h-5 text-gray-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
