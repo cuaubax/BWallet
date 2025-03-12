@@ -21,6 +21,13 @@ function getExplorerUrl(chainId: number, walletAddress: string): string {
   return urlTemplate ? urlTemplate.replace("{address}", walletAddress) : "";
 }
 
+function formatPesos(value: number): string {
+    return value.toLocaleString("en-US", {
+	minimumFractionDigits: 2,
+	maximumFractionDigits: 2,
+    })
+}
+
 
 export const WalletBalance = () => {
     const [mounted, setMounted] = useState(false)
