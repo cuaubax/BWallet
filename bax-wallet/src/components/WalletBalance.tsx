@@ -121,16 +121,16 @@ export const WalletBalance = () => {
     }, [refetch, refetchNativeBalance])
 
     useEffect(() => {
-      if (priceETH && priceUSDT && priceWBTC && balance && balanceUSDC && balanceWBTC && balanceWETH) {
-        const valueETH = parseFloat(priceETH) * parseFloat(balance.formatted)
-        const valueUSDT = parseFloat(priceUSDT) * parseFloat(balanceUSDC)
-        const valueWBTC = parseFloat(priceWBTC) * parseFloat(balanceWBTC)
-        const totalPorfolioValue = valueETH + valueUSDT + valueWBTC + parseFloat(balanceWETH)
-        setValueETH(valueETH.toFixed(2).toString())
-        setValueUSDT(valueUSDT.toFixed(2).toString())
-        setValueWBTC(valueWBTC.toFixed(2).toString())
-        setPortfolioValue(totalPorfolioValue.toString())
-      }
+	if (priceETH && priceUSDT && priceWBTC && balance && balanceUSDC && balanceWBTC && balanceWETH) {
+            const valueETH = parseFloat(priceETH) * parseFloat(balance.formatted)
+            const valueUSDT = parseFloat(priceUSDT) * parseFloat(balanceUSDC)
+            const valueWBTC = parseFloat(priceWBTC) * parseFloat(balanceWBTC)
+            const totalPorfolioValue = valueETH + valueUSDT + valueWBTC + parseFloat(balanceWETH)
+            setValueETH(formatPesos(valueETH))
+            setValueUSDT(formatPesos(valueUSDT))
+            setValueWBTC(formatPesos(valueWBTC))
+            setPortfolioValue(formatPesos(totalPorfolioValue))
+	}
     }, [priceETH, priceUSDT, priceWBTC, balance, balanceUSDC, balanceWBTC, balanceWETH])
 
     useEffect(() => {
