@@ -21,6 +21,13 @@ function getExplorerUrl(chainId: number, walletAddress: string): string {
   return urlTemplate ? urlTemplate.replace("{address}", walletAddress) : "";
 }
 
+function formatPesos(value: number): string {
+    return value.toLocaleString("en-US", {
+	minimumFractionDigits: 2,
+	maximumFractionDigits: 2,
+    })
+}
+
 
 export const WalletBalance = () => {
     const [mounted, setMounted] = useState(false)
@@ -35,8 +42,9 @@ export const WalletBalance = () => {
     const [valueUSDT, setValueUSDT] = useState<string | null>(null)
     const [valueWBTC, setValueWBTC] = useState<string | null>(null)
     const [portfolioValue, setPortfolioValue] = useState<string | null>(null)
+    const [expanded, setExpanded] = useState(false)
     const { data: balance , refetch: refetchNativeBalance} = useBalance({
-      address,
+	address,
     })
     const chainId = useChainId()
 
@@ -114,16 +122,16 @@ export const WalletBalance = () => {
     }, [refetch, refetchNativeBalance])
 
     useEffect(() => {
-      if (priceETH && priceUSDT && priceWBTC && balance && balanceUSDC && balanceWBTC && balanceWETH) {
-        const valueETH = parseFloat(priceETH) * parseFloat(balance.formatted)
-        const valueUSDT = parseFloat(priceUSDT) * parseFloat(balanceUSDC)
-        const valueWBTC = parseFloat(priceWBTC) * parseFloat(balanceWBTC)
-        const totalPorfolioValue = valueETH + valueUSDT + valueWBTC + parseFloat(balanceWETH)
-        setValueETH(valueETH.toFixed(2).toString())
-        setValueUSDT(valueUSDT.toFixed(2).toString())
-        setValueWBTC(valueWBTC.toFixed(2).toString())
-        setPortfolioValue(totalPorfolioValue.toString())
-      }
+	if (priceETH && priceUSDT && priceWBTC && balance && balanceUSDC && balanceWBTC && balanceWETH) {
+            const valueETH = parseFloat(priceETH) * parseFloat(balance.formatted)
+            const valueUSDT = parseFloat(priceUSDT) * parseFloat(balanceUSDC)
+            const valueWBTC = parseFloat(priceWBTC) * parseFloat(balanceWBTC)
+            const totalPorfolioValue = valueETH + valueUSDT + valueWBTC + parseFloat(balanceWETH)
+            setValueETH(formatPesos(valueETH))
+            setValueUSDT(formatPesos(valueUSDT))
+            setValueWBTC(formatPesos(valueWBTC))
+            setPortfolioValue(formatPesos(totalPorfolioValue))
+	}
     }, [priceETH, priceUSDT, priceWBTC, balance, balanceUSDC, balanceWBTC, balanceWETH])
 
     useEffect(() => {
@@ -155,109 +163,132 @@ export const WalletBalance = () => {
     if (!isConnected) return null
   
     return (
-      <div className="bg-sectionBackground rounded-xl p-5 shadow-sm border border-gray-100 mb-8">
-        {/* Header with title and wallet link */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <button
-              onClick={() => window.open(walletURL, '_blank')}
-              className="text-xl font-semibold flex items-center hover:text-gray-700 transition-colors"
-            >
-              <span>
-                Balance ≈ {portfolioValue ? Number(portfolioValue).toFixed(2) : "—"} MXN
-              </span>
-              <svg className="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </button>
-          </div>
-          <button
-            className="bg-white border border-gray-200 hover:bg-gray-50 text-black font-medium px-4 py-2 rounded-xl shadow-sm flex items-center space-x-2 transition-colors"
-            onClick={() => window.open('https://paywithmoon.com/', '_blank')}
-          >
-            <img
-              src="/icons/Card.svg"
-              alt=""
-              className="h-5 w-5"
-            />
-            <span>Fondear Tarjeta</span>
-          </button>
-        </div>
-    
-        <div className="space-y-3">
-          {/* MEXA */}
-          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
-                <img
-                  src="/icons/MEXAS.svg"
-                  alt="MEXA"
-                  className="h-7 w-7"
-                />
-              </div>
-              <span className="font-medium">MEX</span>
+	<div className="bg-sectionBackground rounded-xl p-5 shadow-sm border border-gray-100 mb-8">
+            {/* Header with title and wallet link */}
+            <div className="flex items-center justify-between mb-6">
+		<div className="flex items-center">
+		    <button
+			onClick={() => window.open(walletURL, '_blank')}
+			className="text-xl font-semibold flex items-center hover:text-gray-700 transition-colors"
+		    >
+			<span>
+			    Balance ≈ {portfolioValue ? Number(portfolioValue).toFixed(2) : "—"} MXN
+			</span>
+			<svg className="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+			</svg>
+		    </button>
+		</div>
+		<button
+		    className="bg-white border border-gray-200 hover:bg-gray-50 text-black font-medium px-4 py-2 rounded-xl shadow-sm flex items-center space-x-2 transition-colors"
+		    onClick={() => window.open('https://paywithmoon.com/', '_blank')}
+		>
+		    <img
+			src="/icons/Card.svg"
+			alt=""
+			className="h-5 w-5"
+		    />
+		    <span>Fondear Tarjeta</span>
+		</button>
             </div>
-            <span className="text-lg">
-              <span className="font-bold">{balanceWETH ? balanceWETH : "—"}</span> 
-              <span className="text-gray-600"> ≈ {balanceWETH ? balanceWETH : "—"} MXN</span>
-            </span>
-          </div>
-    
-          {/* Native Token (e.g., ETH) */}
-          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
-                <img
-                  src="https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
-                  alt="ETH"
-                  className="h-7 w-7"
-                />
-              </div>
-              <span className="font-medium">ETH</span>
+	    
+            <div className="space-y-3">
+		{/* MEXA */}
+		<div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
+		    <div className="flex items-center space-x-3">
+			<div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+			    <img
+				src="/icons/MEXAS.svg"
+				alt="MEXA"
+				className="h-7 w-7"
+			    />
+			</div>
+			<span className="font-medium">MEX</span>
+		    </div>
+		    <span className="text-lg">
+			<span className="font-bold">{balanceWETH ? balanceWETH : "—"}</span> 
+			<span className="text-gray-600"> ≈ {balanceWETH ? balanceWETH : "—"} MXN</span>
+		    </span>
+		</div>
+
+		{/* Dropdown Toggle */}
+		<button
+		    onClick={() => setExpanded(!expanded)}
+		    className="flex items-center text-sm font-medium text-black"
+		>
+		    <span>{expanded ? "Ocultar" : "Mostrar resto"}</span>
+		    <svg
+			className="w-4 h-4 ml-1 transform transition-transform duration-200"
+			style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+			xmlns="http://www.w3.org/2000/svg"
+		    >
+			<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+		    </svg>
+		</button>
+
+		
+		{expanded && (
+		    <>
+			{/* Native Token (e.g., ETH) */}
+			<div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
+			    <div className="flex items-center space-x-3">
+				<div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+				    <img
+					src="https://cryptologos.cc/logos/ethereum-eth-logo.png?v=040"
+					     alt="ETH"
+					     className="h-7 w-7"
+				    />
+				</div>
+				<span className="font-medium">ETH</span>
+			    </div>
+			    <span className="text-lg">
+				<span className="font-bold">{balance?.formatted}</span> 
+				<span className="text-gray-600"> ≈ {valueETH ? valueETH : "—"} MXN</span>
+			    </span>
+			</div>
+			
+			{/* WBTC */}
+			<div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
+			    <div className="flex items-center space-x-3">
+				<div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+				    <img
+					src="https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
+					     alt="WBTC"
+					     className="h-7 w-7"
+				    />
+				</div>
+				<span className="font-medium">WBTC</span>
+			    </div>
+			    <span className="text-lg">
+				<span className="font-bold">{balanceWBTC ? balanceWBTC : '—'}</span> 
+				<span className="text-gray-600"> ≈ {valueWBTC ? valueWBTC : "—"} MXN</span>
+			    </span>
+			</div>
+			
+			{/* USDT */}
+			<div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
+			    <div className="flex items-center space-x-3">
+				<div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
+				    <img
+					src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
+					     alt="USDT"
+					     className="h-7 w-7"
+				    />
+				</div>
+				<span className="font-medium">USDT</span>
+			    </div>
+			    <span className="text-lg">
+				<span className="font-bold">{balanceUSDC ? balanceUSDC : '—'}</span> 
+				<span className="text-gray-600"> ≈ {valueUSDT ? valueUSDT : "—"} MXN</span>
+			    </span>
+			</div>
+		    </>
+		)}
             </div>
-            <span className="text-lg">
-              <span className="font-bold">{balance?.formatted}</span> 
-              <span className="text-gray-600"> ≈ {valueETH ? valueETH : "—"} MXN</span>
-            </span>
-          </div>
-    
-          {/* WBTC */}
-          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
-                <img
-                  src="https://res.coinpaper.com/coinpaper/wrapped_bitcoin_wbtc_logo_5318368b91.svg"
-                  alt="WBTC"
-                  className="h-7 w-7"
-                />
-              </div>
-              <span className="font-medium">WBTC</span>
-            </div>
-            <span className="text-lg">
-              <span className="font-bold">{balanceWBTC ? balanceWBTC : '—'}</span> 
-              <span className="text-gray-600"> ≈ {valueWBTC ? valueWBTC : "—"} MXN</span>
-            </span>
-          </div>
-    
-          {/* USDT */}
-          <div className="bg-itemBackground rounded-xl p-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm p-1">
-                <img
-                  src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=040"
-                  alt="USDT"
-                  className="h-7 w-7"
-                />
-              </div>
-              <span className="font-medium">USDT</span>
-            </div>
-            <span className="text-lg">
-              <span className="font-bold">{balanceUSDC ? balanceUSDC : '—'}</span> 
-              <span className="text-gray-600"> ≈ {valueUSDT ? valueUSDT : "—"} MXN</span>
-            </span>
-          </div>
-        </div>
-      </div>
+	</div>
     )
-  }
+}
   
