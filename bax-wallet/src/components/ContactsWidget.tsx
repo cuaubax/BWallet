@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 // Basic Contact Type
 interface Contact {
+  // re think this id 
   id: string;
   name: string;
   walletAddress: string;
@@ -76,6 +77,11 @@ export const Contacts = () => {
 
     const handleDeleteContact = () => {
 	console.log('Remove contact')
+    }
+
+    const handleCloseModal = () => {
+	resetForm()
+	setShowAddModal(false)
     }
 
     const resetForm = () => {
