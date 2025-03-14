@@ -41,7 +41,7 @@ export const WalletBalance = () => {
     const [valueETH, setValueETH] = useState<string | null>(null)
     const [valueUSDT, setValueUSDT] = useState<string | null>(null)
     const [valueWBTC, setValueWBTC] = useState<string | null>(null)
-    const [portfolioValue, setPortfolioValue] = useState<string | null>(null)
+    const [portfolioValue, setPortfolioValue] = useState<string | null>('0')
     const [expanded, setExpanded] = useState(false)
     const { data: balance , refetch: refetchNativeBalance} = useBalance({
 	address,
@@ -123,10 +123,10 @@ export const WalletBalance = () => {
 
     useEffect(() => {
 	if (priceETH && priceUSDT && priceWBTC && balance && balanceUSDC && balanceWBTC && balanceWETH) {
-            const valueETH = parseFloat(priceETH) * parseFloat(balance.formatted)
-            const valueUSDT = parseFloat(priceUSDT) * parseFloat(balanceUSDC)
-            const valueWBTC = parseFloat(priceWBTC) * parseFloat(balanceWBTC)
-            const totalPorfolioValue = valueETH + valueUSDT + valueWBTC + parseFloat(balanceWETH)
+            const valueETH = parseFloat(priceETH) * parseFloat(balance.formatted ?? "0")
+            const valueUSDT = parseFloat(priceUSDT) * parseFloat(balanceUSDC ?? "0")
+            const valueWBTC = parseFloat(priceWBTC) * parseFloat(balanceWBTC ?? "0")
+            const totalPorfolioValue = valueETH + valueUSDT + valueWBTC + parseFloat(balanceWETH ?? "0")
             setValueETH(formatPesos(valueETH))
             setValueUSDT(formatPesos(valueUSDT))
             setValueWBTC(formatPesos(valueWBTC))
