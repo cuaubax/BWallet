@@ -329,10 +329,9 @@ export const BatchTransfer = () => {
   if (chainId === SEPOLIA || chainId === ARBITRUM) {
     return (
 	<div className="bg-sectionBackground rounded-xl p-5 shadow-sm">
-	    <h2 className="text-xl font-semibold mb-6">Dispersión Múltiple</h2>
 	    
 	    {/* Tab Navigation */}
-	    <div className="flex border-b border-gray-200 mb-6">
+	    <div className="flex mb-6">
 		<button
 		    className={`py-3 px-4 font-medium ${
           activeTab === 'contacts'

@@ -94,7 +94,7 @@ export const Contacts = () => {
     
     
     return (
-	<div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+	<div className="bg-sectionBackground rounded-xl p-5 shadow-sm border border-gray-100">
 	    <div className="flex justify-between items-center mb-6">
 		<h2 className="text-xl font-semibold">Contactos</h2>
 		<button 
@@ -111,7 +111,7 @@ export const Contacts = () => {
 	    {contacts.length > 0 ? (
 		<div>
 		    {/* Header row */}
-		    <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-gray-200">
+		    <div className="flex items-center justify-between px-3 py-2 mb-2">
 			<div className="w-1/4 text-xs text-gray-500 font-medium">Nombre</div>
 			<div className="w-1/4 text-xs text-gray-500 font-medium">Dirección de Wallet</div>
 			<div className="w-1/4 text-xs text-gray-500 font-medium">Email / Teléfono</div>
@@ -121,7 +121,7 @@ export const Contacts = () => {
 		    {/* Contact cards */}
 		    <div className="space-y-3">
 			{contacts.map((contact) => (
-			    <div key={contact.id} className="bg-gray-50 rounded-xl p-3 hover:bg-gray-100 transition-colors">
+			    <div key={contact.id} className="bg-itemBackground rounded-xl p-3 hover:bg-gray-100 transition-colors">
 				<div className="flex items-center justify-between">
 				    {/* Name */}
 				    <div className="w-1/4 text-sm font-medium">{contact.name}</div>
