@@ -5,15 +5,17 @@ import { AaveComponent } from './EarnWidget'
 import { BatchTransfer } from './Dispersions'
 import { WalletBalance } from './WalletBalance'
 import { Contacts } from './ContactsWidget'
+import { CardsWidget } from './CardsWidget'
 
 import { useState } from 'react'
 
 const tabs = [
-    { id: 'transactions', label: 'Historial', icon: "/icons/Vector.svg" },
-    { id: 'dispersions', label: 'Dispersiones', icon: "/icons/Payments.svg" },
-    { id: 'swap', label: 'Cambios', icon: "/icons/SwapVertical.svg" },
-    { id: 'earn', label: 'Ahorro', icon: "/icons/Wallet.svg" },
-    { id: 'contacts', label: 'Contactos', icon: "/icons/Contactos.svg" }
+  { id: 'transactions', label: 'Historial', icon: "/icons/Vector.svg" },
+  { id: 'dispersions', label: 'Dispersiones', icon: "/icons/Payments.svg" },
+  { id: 'swap', label: 'Cambios', icon: "/icons/SwapVertical.svg" },
+  { id: 'earn', label: 'Ahorro', icon: "/icons/Wallet.svg" },
+  { id: 'contacts', label: 'Contactos', icon: "/icons/Contactos.svg" },
+  { id: 'cards', label: 'Tarjetas', icon: "/icons/Card.svg" }
 ] as const
 
 export const Layout = () => {
@@ -60,20 +62,21 @@ export const Layout = () => {
 	      </div>
 	  </aside>
 
-	  {/* Main Area */}
-	  <main className="flex-1 p-8 bg-white">
-              <div className="flex justify-end mb-4">
-		  <WalletConnect />
-              </div>
-              <div className="top-0 bg-gray-50 z-10">
-		  <WalletBalance />
-              </div>
-              {activeTab === 'transactions' && <TransactionHistory />}
-              {activeTab === 'dispersions' && <BatchTransfer />}
-              {activeTab === 'swap' && <SwapWidget />}
-              {activeTab === 'earn' && <AaveComponent />}
-	      {activeTab === 'contacts' && <Contacts />}
-	  </main>
-      </div>
+      {/* Main Area */}
+      <main className="flex-1 p-8 bg-white">
+        <div className="flex justify-end mb-4">
+          <WalletConnect />
+        </div>
+        <div className="top-0 bg-gray-50 z-10">
+          <WalletBalance />
+        </div>
+        {activeTab === 'transactions' && <TransactionHistory />}
+        {activeTab === 'dispersions' && <BatchTransfer />}
+        {activeTab === 'swap' && <SwapWidget />}
+        {activeTab === 'earn' && <AaveComponent />}
+        {activeTab === 'cards' && <CardsWidget />}
+        {activeTab === 'contacts' && <Contacts />}
+      </main>
+    </div>
   )
 }
