@@ -28,37 +28,6 @@ interface CardApiResponse {
     }
   }
 
-// Mock data for demonstration
-const mockCards = [
-  {
-    id: 1,
-    name: 'Adobe and Figma Design',
-    cardType: 'Virtual',
-    cardNumber: '3481',
-    monthlySpent: 0,
-    limit: 30000,
-    status: 'Activa',
-  },
-  {
-    id: 2,
-    name: 'Marketing Team',
-    cardType: 'Physical',
-    cardNumber: '5923',
-    monthlySpent: 12500,
-    limit: 50000,
-    status: 'Activa',
-  },
-  {
-    id: 3,
-    name: 'Office Supplies',
-    cardType: 'Virtual',
-    cardNumber: '7114',
-    monthlySpent: 3600,
-    limit: 10000,
-    status: 'Inactiva',
-  }
-]
-
 const mockTransactions = [
   {
     id: 1,
@@ -124,12 +93,13 @@ export const CardsWidget = () => {
     setError(null);
     
     try {
-      const data: CardApiResponse = await axios.get("/api/moonproxy?path=card&page=1&limit=10")
+      const data = await axios.get("/api/moonproxy?path=card&page=1&limit=10")
 
-      console.log(data.data.cards)
+      const cardApiResponse: CardApiResponse = data.data
+      console.log(cardApiResponse.cards)
       
       // Just use the cards data directly from the API response
-      setCards(data.cards);
+      setCards(cardApiResponse.cards)
     } catch (err) {
       console.error('Error fetching cards:', err)
       setError('Error al cargar las tarjetas. Por favor, intente de nuevo.')
@@ -170,13 +140,18 @@ export const CardsWidget = () => {
       {activeTab === 'cards' && (
         <div className="mt-6">
           {/* Table Header */}
-          <div className="grid grid-cols-4 py-4 border-b border-gray-200">
-            <div className="text-sm font-medium text-gray-500">Nombre / Alias</div>
+          <div className="grid grid-cols-5 py-4 border-b border-gray-200">
             <div className="text-sm font-medium text-gray-500">
-              Consumido en el mes
+                ID
             </div>
             <div className="text-sm font-medium text-gray-500">
-              Límite
+              Balance disponible
+            </div>
+            <div className="text-sm font-medium text-gray-500">
+              Válida hasta
+            </div>
+            <div className="text-sm font-medium text-gray-500">
+              CVV
             </div>
             <div className="text-sm font-medium text-gray-500">
               Estado
@@ -184,25 +159,25 @@ export const CardsWidget = () => {
           </div>
 
           {/* Card List */}
-          {mockCards.map(card => (
-            <div key={card.id} className="grid grid-cols-4 py-6 border-b border-gray-100 hover:bg-gray-50 cursor-pointer">
+          {cards.map(card => (
+            <div key={card.id} className="grid grid-cols-5 py-6 border-b border-gray-100 hover:bg-gray-50 cursor-pointer">
               <div>
-                <div className="font-medium">{card.name}</div>
-                <div className="text-sm text-gray-500">
-                  {card.cardType} * {card.cardNumber}
+                <div className="font-medium">{card.id}</div>
+              </div>
+              <div className="flex items-center font-medium">
+                  ${card.available_balance.toLocaleLowerCase()} (USD)
                 </div>
+              <div className="flex items-center font-medium">
+                {card.display_expiration}
               </div>
               <div className="flex items-center font-medium">
-                ${card.monthlySpent.toLocaleString()} MXN
-              </div>
-              <div className="flex items-center font-medium">
-                ${card.limit.toLocaleString()} / mes
+                {card.cvv}
               </div>
               <div className="flex items-center">
                 <span className={`px-2 py-1 text-sm font-medium rounded-full ${
-                  card.status === 'Activa' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  card.frozen === 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                 }`}>
-                  {card.status}
+                  Activa
                 </span>
               </div>
             </div>
