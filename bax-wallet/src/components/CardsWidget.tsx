@@ -81,6 +81,7 @@ export const CardsWidget = () => {
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [fundAmount, setFundAmount] = useState<number>(0)
+  const [showSensitiveData, setShowSensitiveData] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -89,7 +90,7 @@ export const CardsWidget = () => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab)
-    fetchCards()
+    //fetchCards()
   }
 
   const fetchCards = async () => {
@@ -120,6 +121,7 @@ export const CardsWidget = () => {
   const closeCardModal = () => {
     setIsModalOpen(false)
     setSelectedCard(null)
+    setShowSensitiveData(false)
   }
 
   const addFunds = async (card: CardData, amountUSDC: number) => {
@@ -363,9 +365,20 @@ export const CardsWidget = () => {
                 <div className="text-xl font-bold">VISA</div>
               </div>
               
-              <div className="mb-6 text-xl tracking-widest font-mono">
-                {selectedCard.pan.replace(/(\d{4})/g, '$1 ').trim()}
-              </div>
+              <div className="mb-6 text-xl tracking-widest font-mono relative">
+                {showSensitiveData 
+                ? selectedCard.pan.replace(/(\d{4})/g, '$1 ').trim()
+                : "•••• •••• •••• " + selectedCard.pan.slice(-4)}
+                <button 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSensitiveData(!showSensitiveData);
+                }}
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 text-white opacity-70 hover:opacity-100"
+                >
+                    {showSensitiveData ? "Ocultar" : "Mostrar"}
+                </button>
+            </div>
               
               <div className="flex justify-between items-end">
                 <div>
@@ -374,7 +387,7 @@ export const CardsWidget = () => {
                 </div>
                 <div>
                   <div className="text-xs opacity-80 mb-1">CVV</div>
-                  <div>{selectedCard.cvv}</div>
+                  <div>{showSensitiveData ? selectedCard.cvv : "•••"}</div>
                 </div>
               </div>
             </div>
@@ -398,7 +411,7 @@ export const CardsWidget = () => {
             <div className="mt-6">
                 <div className="mb-3">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Amount to add (USD)
+                        Monto a añadir (USD)
                     </label>
                 <input
                 type="number"
@@ -410,7 +423,7 @@ export const CardsWidget = () => {
                 />
             </div>
             <button 
-            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            className="w-full px-4 py-3 bg-black text-white rounded-xl font-medium"
             onClick={() => addFunds(selectedCard, fundAmount)}
             disabled={isLoading}
             >
@@ -421,17 +434,17 @@ export const CardsWidget = () => {
             {/* Secondary Actions */}
             <div className="mt-4 flex space-x-4">
               <button 
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 flex-1"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 flex-1 rounded-xl"
                 onClick={closeCardModal}
               >
                 Cerrar
               </button>
               {selectedCard.frozen === 0 ? (
-                <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 flex-1">
+                <button className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded flex-1 rounded-xl border border-black">
                   Congelar Tarjeta
                 </button>
               ) : (
-                <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex-1">
+                <button className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded flex-1 rounded-xl border border-black">
                   Reactivar Tarjeta
                 </button>
               )}
