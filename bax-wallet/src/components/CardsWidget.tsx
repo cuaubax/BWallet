@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { headers } from 'next/headers';
 import { useState, useEffect } from 'react'
 
 interface CardData {
@@ -79,6 +80,7 @@ export const CardsWidget = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [fundAmount, setFundAmount] = useState<number>(0)
 
   useEffect(() => {
     setMounted(true)
@@ -118,6 +120,63 @@ export const CardsWidget = () => {
   const closeCardModal = () => {
     setIsModalOpen(false)
     setSelectedCard(null)
+  }
+
+  const addFunds = async (card: CardData, amountUSDC: number) => {
+    try{
+        const invoiceData = await axios.post("/api/moonproxy?path=onchain/invoice",
+            {
+                creditPurchaseAmount: amountUSDC,
+                blockchain: "POLYGON",
+                currency: "USDC"
+            },
+            {
+                headers: {
+                    accept: "application/json",
+                    'Content-Type': "application/json"
+                }
+            }
+
+        )
+
+        console.log(invoiceData.data)
+
+        const invoiceID = invoiceData.data.invoice.id
+        const invoiceURL = `/api/moonproxy?path=onchain/invoice/${invoiceID}/simulate-payment`
+
+        const simulatedData = await axios.post(invoiceURL,
+            {},
+            {
+                headers: {
+                    accept: "application/json",
+                    'Content-Type': "application/json"
+                }
+            }
+        )
+
+        console.log(simulatedData)
+
+        const addBalanceURL = `/api/moonproxy?path=card/${card.id}/add-balance`
+        const addBalanceData = await axios.post(addBalanceURL,
+            {
+                amount: amountUSDC,
+            },
+            {
+                headers: {
+                    accept: "application/json",
+                    'Content-Type': "application/json"
+                }
+            }
+
+        )
+
+        console.log(addBalanceData)
+
+        fetchCards()
+    } catch (err) {
+        console.error('Error adding balance:', err)
+        setError('Error al añadir fondos. Por favor, intente de nuevo.')
+    }
   }
 
   const formatPan = (pan: string) => {
@@ -198,7 +257,7 @@ export const CardsWidget = () => {
               >
                 <div>
                   <div className="font-medium">{formatPan(card.pan)}</div>
-                  <div className="text-sm text-gray-500">Virtual</div>
+                  <div className="text-sm text-gray-500">Virtual Card</div>
                 </div>
                 <div className="flex items-center font-medium">
                   ${card.available_balance} USD
@@ -298,15 +357,6 @@ export const CardsWidget = () => {
           
           {/* Modal Content */}
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-auto z-10 relative">
-            <button 
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              onClick={closeCardModal}
-            >
-              ✕
-            </button>
-            
-            <h2 className="text-xl font-bold mb-4">Detalle de tarjeta</h2>
-            
             <div className="bg-black rounded-xl p-6 text-white shadow-lg mb-6">
               <div className="flex justify-between items-start mb-8">
                 <div className="text-sm uppercase tracking-wider opacity-80">Tarjeta Virtual</div>
@@ -319,7 +369,7 @@ export const CardsWidget = () => {
               
               <div className="flex justify-between items-end">
                 <div>
-                  <div className="text-xs opacity-80 mb-1">Válida Hasta</div>
+                  <div className="text-xs opacity-80 mb-1">VALIDA HASTA</div>
                   <div>{selectedCard.display_expiration}</div>
                 </div>
                 <div>
@@ -330,35 +380,59 @@ export const CardsWidget = () => {
             </div>
             
             <div className="space-y-4">
-              
               <div className="grid grid-cols-2 gap-2">
-                <div className="text-gray-500">Disponible:</div>
-                <div className="font-medium">${selectedCard.available_balance} USD</div>
+                <div className="text-gray-500">Balance Disponible:</div>
+                <div className="font-medium">${selectedCard.true_balance} USD</div>
               </div>
               
               <div className="grid grid-cols-2 gap-2">
-                <div className="text-gray-500">Estatus:</div>
+                <div className="text-gray-500">Status:</div>
                 <div className={`font-medium ${selectedCard.frozen === 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {selectedCard.frozen === 0 ? 'Active' : 'Frozen'}
+                  {selectedCard.frozen === 0 ? 'Activa' : 'Congelada'}
                 </div>
               </div>
-
+              
             </div>
             
-            <div className="mt-6 flex space-x-4">
+            {/* Primary Action - Add Funds */}
+            <div className="mt-6">
+                <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Amount to add (USD)
+                    </label>
+                <input
+                type="number"
+                min="1"
+                step="1"
+                value={fundAmount}
+                onChange={(e) => setFundAmount(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+            </div>
+            <button 
+            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            onClick={() => addFunds(selectedCard, fundAmount)}
+            disabled={isLoading}
+            >
+                {isLoading ? 'Procesando...' : 'Añadir Fondos'}
+             </button>
+            </div>
+            
+            {/* Secondary Actions */}
+            <div className="mt-4 flex space-x-4">
               <button 
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 flex-1"
                 onClick={closeCardModal}
               >
-                Close
+                Cerrar
               </button>
               {selectedCard.frozen === 0 ? (
                 <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 flex-1">
-                  Freeze Card
+                  Congelar Tarjeta
                 </button>
               ) : (
                 <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex-1">
-                  Unfreeze Card
+                  Reactivar Tarjeta
                 </button>
               )}
             </div>
