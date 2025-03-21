@@ -197,7 +197,16 @@ const completePaymentProcess = async () => {
 
         console.log(addBalanceData)
         setInvoiceDetails(null)
-        fetchCards()
+        await fetchCards()
+
+        if (selectedCard) {
+            // Should update the model data right after adding funds
+            const updatedCard = cards.find(card => card.id === selectedCard.id);
+            if (updatedCard) {
+                setSelectedCard(updatedCard)
+            }
+        }
+
     } catch (err) {
         console.error('Error adding balance:', err)
         setError('Error al añadir fondos. Por favor, intente de nuevo.')
