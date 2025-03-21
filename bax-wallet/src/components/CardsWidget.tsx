@@ -82,6 +82,8 @@ export const CardsWidget = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [fundAmount, setFundAmount] = useState<number>(0)
   const [showSensitiveData, setShowSensitiveData] = useState(false)
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+  const [invoiceDetails, setInvoiceDetails] = useState<any>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -125,6 +127,9 @@ export const CardsWidget = () => {
   }
 
   const addFunds = async (card: CardData, amountUSDC: number) => {
+
+    setIsLoading(true)
+
     try{
         const invoiceData = await axios.post("/api/moonproxy?path=onchain/invoice",
             {
@@ -143,8 +148,26 @@ export const CardsWidget = () => {
 
         console.log(invoiceData.data)
 
-        const invoiceID = invoiceData.data.invoice.id
-        const invoiceURL = `/api/moonproxy?path=onchain/invoice/${invoiceID}/simulate-payment`
+        setInvoiceDetails(invoiceData.data)
+        setIsConfirmModalOpen(true)
+        setIsLoading(false)
+
+    } catch (err) {
+        console.error('Error creating invoice:', err);
+        setError('Error al crear la factura. Por favor, intente de nuevo.');
+        setIsLoading(false)
+    }
+}
+
+const completePaymentProcess = async () => {
+    if (!invoiceDetails || !selectedCard) return
+
+    setIsLoading(true)
+    setIsConfirmModalOpen(false)
+
+    try {
+
+        const invoiceURL = `/api/moonproxy?path=onchain/invoice/${invoiceDetails.invoice.id}/simulate-payment`
 
         const simulatedData = await axios.post(invoiceURL,
             {},
@@ -158,10 +181,10 @@ export const CardsWidget = () => {
 
         console.log(simulatedData)
 
-        const addBalanceURL = `/api/moonproxy?path=card/${card.id}/add-balance`
+        const addBalanceURL = `/api/moonproxy?path=card/${selectedCard.id}/add-balance`
         const addBalanceData = await axios.post(addBalanceURL,
             {
-                amount: amountUSDC,
+                amount: invoiceDetails.invoice.usdAmountOwed,
             },
             {
                 headers: {
@@ -173,13 +196,20 @@ export const CardsWidget = () => {
         )
 
         console.log(addBalanceData)
-
+        setInvoiceDetails(null)
         fetchCards()
     } catch (err) {
         console.error('Error adding balance:', err)
         setError('Error al añadir fondos. Por favor, intente de nuevo.')
+    } finally {
+        setIsLoading(false)
     }
   }
+
+  const cancelPaymentProcess = () => {
+    setInvoiceDetails(null)
+    setIsConfirmModalOpen(false)
+}
 
   const formatPan = (pan: string) => {
     return '••••' + pan.slice(-4)
@@ -437,6 +467,68 @@ export const CardsWidget = () => {
           </div>
         </div>
       )}
+
+      {/* Payment Confirmation Modal */}
+    {isConfirmModalOpen && invoiceDetails && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+            {/* Backdrop */}
+            <div 
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={cancelPaymentProcess}
+            ></div>
+            
+            {/* Modal Content */}
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-auto z-10 relative">
+            <h3 className="text-xl font-bold mb-4">Confirmar Pago</h3>
+            
+            <div className="space-y-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-600">Monto:</div>
+                    <div className="font-medium">${invoiceDetails.invoice.cryptoAmountOwed} {invoiceDetails.invoice.currency}</div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="text-gray-600">Red:</div>
+                    <div className="font-medium">{invoiceDetails.invoice.blockchain}</div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="text-gray-600">ID de Factura:</div>
+                    <div className="font-medium truncate text-sm">{invoiceDetails.invoice.id}</div>
+                </div>
+                
+                {invoiceDetails.invoice.address && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                    <div className="text-gray-600">Dirección:</div>
+                    <div className="font-medium truncate text-sm">{invoiceDetails.invoice.address}</div>
+                    </div>
+                )}
+                </div>
+                
+                <div className="bg-blue-50 p-4 rounded-lg text-blue-700 text-sm">
+                <p>Da click en "Simular" para completar el proceso</p>
+                <p className="mt-1">Cuando el producto esté listo la transferencia se hará directamente en metamask.</p>
+                </div>
+            </div>
+            
+            <div className="flex space-x-4">
+                <button 
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-xl flex-1"
+                onClick={cancelPaymentProcess}
+                >
+                Cancelar
+                </button>
+                <button 
+                className="px-4 py-2 bg-black text-white rounded-xl flex-1"
+                onClick={completePaymentProcess}
+                >
+                Simular
+                </button>
+            </div>
+            </div>
+        </div>
+    )}
     </div>
   )
 }
