@@ -231,18 +231,12 @@ export const CardsWidget = () => {
       {activeTab === 'cards' && !isLoading && !error && (
         <div className="mt-6">
           {/* Table Header */}
-          <div className="grid grid-cols-5 py-4 border-b border-gray-200">
+          <div className="grid grid-cols-3 py-4 border-b border-gray-200">
             <div className="text-sm font-medium text-gray-500">
                 Tarjeta
             </div>
             <div className="text-sm font-medium text-gray-500">
               Balance disponible
-            </div>
-            <div className="text-sm font-medium text-gray-500">
-              Válida hasta
-            </div>
-            <div className="text-sm font-medium text-gray-500">
-              CVV
             </div>
             <div className="text-sm font-medium text-gray-500">
               Estado
@@ -254,7 +248,7 @@ export const CardsWidget = () => {
             cards.map(card => (
               <div 
                 key={card.id} 
-                className="grid grid-cols-5 py-6 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+                className="grid grid-cols-3 py-6 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
                 onClick={() => openCardModal(card)}
               >
                 <div>
@@ -263,12 +257,6 @@ export const CardsWidget = () => {
                 </div>
                 <div className="flex items-center font-medium">
                   ${card.available_balance} USD
-                </div>
-                <div className="flex items-center font-medium">
-                  {card.display_expiration}
-                </div>
-                <div className="flex items-center font-medium">
-                  {card.cvv}
                 </div>
                 <div className="flex items-center">
                   <span className={`px-2 py-1 text-sm font-medium rounded-full ${
@@ -360,94 +348,91 @@ export const CardsWidget = () => {
           {/* Modal Content */}
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-auto z-10 relative">
             <div className="bg-black rounded-xl p-6 text-white shadow-lg mb-6">
-              <div className="flex justify-between items-start mb-8">
-                <div className="text-sm uppercase tracking-wider opacity-80">Tarjeta Virtual</div>
-                <div className="text-xl font-bold">VISA</div>
-              </div>
-              
-              <div className="mb-6 text-xl tracking-widest font-mono relative">
-                {showSensitiveData 
-                ? selectedCard.pan.replace(/(\d{4})/g, '$1 ').trim()
-                : "•••• •••• •••• " + selectedCard.pan.slice(-4)}
+                <div className="flex justify-between items-start mb-8">
+                    <div className="text-sm uppercase tracking-wider opacity-80">Tarjeta Virtual</div>
+                    <div className="text-xl font-bold">VISA</div>
+                </div>
+            
+                <div className="mb-6 text-xl tracking-widest font-mono">
+                    {showSensitiveData 
+                    ? selectedCard.pan.replace(/(\d{4})/g, '$1 ').trim()
+                    : "•••• •••• •••• " + selectedCard.pan.slice(-4)}
+                </div>
+            
+                <div className="flex justify-between items-end">
+                    <div>
+                    <div className="text-xs opacity-80 mb-1">VALIDA HASTA</div>
+                    <div>{selectedCard.display_expiration}</div>
+                    </div>
+                    <div>
+                    <div className="text-xs opacity-80 mb-1">CVV</div>
+                    <div>{showSensitiveData ? selectedCard.cvv : "•••"}</div>
+                    </div>
+                </div>
+            </div>
+                        
+            {/* Card Actions */}
+            <div className="flex space-x-4 mb-6">
                 <button 
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setShowSensitiveData(!showSensitiveData);
-                }}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 text-white opacity-70 hover:opacity-100"
+                onClick={() => setShowSensitiveData(!showSensitiveData)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-xl hover:bg-gray-300 flex-1"
                 >
-                    {showSensitiveData ? "Ocultar" : "Mostrar"}
+                    {showSensitiveData ? "Ocultar detalles" : "Mostrar detalles"}
                 </button>
+            
+            {selectedCard.frozen === 0 ? (
+                <button className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded-xl flex-1 border border-black">
+                    Congelar Tarjeta
+                </button>
+            ) : (
+                <button className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded-xl flex-1 border border-black">
+                    Reactivar Tarjeta
+                </button>
+            )}
             </div>
-              
-              <div className="flex justify-between items-end">
-                <div>
-                  <div className="text-xs opacity-80 mb-1">VALIDA HASTA</div>
-                  <div>{selectedCard.display_expiration}</div>
+
+            {/* Card Info */}
+            <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Balance Disponible:</div>
+                    <div className="font-medium">${selectedCard.true_balance} USD</div>
                 </div>
-                <div>
-                  <div className="text-xs opacity-80 mb-1">CVV</div>
-                  <div>{showSensitiveData ? selectedCard.cvv : "•••"}</div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Estado:</div>
+                    <div className={`font-medium ${selectedCard.frozen === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {selectedCard.frozen === 0 ? 'Activa' : 'Congelada'}
+                    </div>
                 </div>
-              </div>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="text-gray-500">Balance Disponible:</div>
-                <div className="font-medium">${selectedCard.true_balance} USD</div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div className="text-gray-500">Status:</div>
-                <div className={`font-medium ${selectedCard.frozen === 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {selectedCard.frozen === 0 ? 'Activa' : 'Congelada'}
-                </div>
-              </div>
-              
-            </div>
-            
-            {/* Primary Action - Add Funds */}
+            {/* Add Funds - Single Line */}
             <div className="mt-6">
-                <div className="mb-3">
+                <div className="flex space-x-3">
+                    <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Monto a añadir (USD)
                     </label>
-                <input
-                type="number"
-                min="1"
-                step="1"
-                value={fundAmount}
-                onChange={(e) => setFundAmount(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            </div>
-            <button 
-            className="w-full px-4 py-3 bg-black text-white rounded-xl font-medium"
-            onClick={() => addFunds(selectedCard, fundAmount)}
-            disabled={isLoading}
-            >
-                {isLoading ? 'Procesando...' : 'Añadir Fondos'}
-             </button>
-            </div>
-            
-            {/* Secondary Actions */}
-            <div className="mt-4 flex space-x-4">
-              <button 
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 flex-1 rounded-xl"
-                onClick={closeCardModal}
-              >
-                Cerrar
-              </button>
-              {selectedCard.frozen === 0 ? (
-                <button className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded flex-1 rounded-xl border border-black">
-                  Congelar Tarjeta
-                </button>
-              ) : (
-                <button className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded flex-1 rounded-xl border border-black">
-                  Reactivar Tarjeta
-                </button>
-              )}
+                    <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={fundAmount === 0 ? '' : fundAmount}
+                        onChange={(e) => setFundAmount(Number(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="10"
+                    />
+                    </div>
+                    <div className="flex items-end">
+                    <button 
+                        className="px-6 py-2 bg-black text-white rounded-xl font-medium h-10 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        onClick={() => addFunds(selectedCard, fundAmount)}
+                        disabled={isLoading || fundAmount <= 0}
+                    >
+                        {isLoading ? 'Procesando...' : 'Añadir'}
+                    </button>
+                    </div>
+                </div>
             </div>
           </div>
         </div>
