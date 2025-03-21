@@ -126,6 +126,31 @@ export const CardsWidget = () => {
     setShowSensitiveData(false)
   }
 
+  const createNewCard = async () => {
+    // This is hard coded for now, but must change depending on the product or the card
+    const cardProductID = "8f1c611d-098d-4f61-b106-f7b6d344b1ae"
+    const newCardURL = `/api/moonproxy?path=card/${cardProductID}`
+
+    try {
+        const newCardData = await axios.post(newCardURL,
+            {},
+            {
+                headers: {
+                    accept: "application/json",
+                    'Content-Type': "application/json"
+                }
+            }
+        )
+
+       console.log(newCardData.status)
+       fetchCards()
+
+    } catch (err) {
+        console.log("Error creating new card:", err)
+        setError('Error al crear nueva tarjeta.')
+    }
+  }
+
   const addFunds = async (card: CardData, amountUSDC: number) => {
 
     setIsLoading(true)
@@ -153,8 +178,8 @@ export const CardsWidget = () => {
         setIsLoading(false)
 
     } catch (err) {
-        console.error('Error creating invoice:', err);
-        setError('Error al crear la factura. Por favor, intente de nuevo.');
+        console.error('Error creating invoice:', err)
+        setError('Error al crear la factura. Por favor, intente de nuevo.')
         setIsLoading(false)
     }
 }
@@ -314,7 +339,9 @@ const completePaymentProcess = async () => {
 
           {/* Add Card Button */}
           <div className="mt-6">
-            <button className="px-6 py-3 font-medium text-white bg-black rounded-lg hover:bg-gray-800">
+            <button 
+            className="px-6 py-3 font-medium text-white bg-black rounded-lg hover:bg-gray-800"
+            onClick={createNewCard}>
               + Nueva Tarjeta
             </button>
           </div>
