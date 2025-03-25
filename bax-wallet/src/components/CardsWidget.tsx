@@ -90,7 +90,7 @@ export const CardsWidget = () => {
     fetchCards()
   }, [])
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = (tab: string) => {
     setActiveTab(tab)
     //fetchCards()
   }
