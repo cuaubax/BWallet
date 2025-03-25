@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { headers } from 'next/headers';
 import { useState, useEffect } from 'react'
+import { useAccount } from 'wagmi';
 
 interface CardData {
     id: string;
@@ -28,6 +29,10 @@ interface CardApiResponse {
       total: number;
     }
   }
+
+  interface WalletCards {
+    [walletAddress: string]: string[];
+  }  
 
 const mockTransactions = [
   {
@@ -72,6 +77,8 @@ const mockTransactions = [
   }
 ]
 
+const STORAGE_KEY = 'wallet-cards'
+
 export const CardsWidget = () => {
   const [activeTab, setActiveTab] = useState('cards')
   const [mounted, setMounted] = useState(false)
@@ -84,11 +91,41 @@ export const CardsWidget = () => {
   const [showSensitiveData, setShowSensitiveData] = useState(false)
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
   const [invoiceDetails, setInvoiceDetails] = useState<any>(null)
+  const { address } = useAccount()
 
   useEffect(() => {
     setMounted(true)
     fetchCards()
   }, [])
+
+  function userCards(walletAddress: `0x${string}`, cards: CardData[]): CardData[]{
+    if (walletAddress) {
+      const allCards = localStorage.getItem(STORAGE_KEY)
+
+      if (!allCards) return []
+      const parsedCards: WalletCards = JSON.parse(allCards)
+      const userCards =  parsedCards[walletAddress] || []
+      
+      return cards.filter(card => userCards.includes(card.id))
+
+    } else {
+      return []
+    }
+  }
+
+  function saveNewCard(walletAddress:  `0x${string}`, card: CardData) {
+    const allCards = localStorage.getItem(STORAGE_KEY)
+    const parsedCards: WalletCards = allCards ? JSON.parse(allCards) : {}
+
+    if(!parsedCards[walletAddress]) {
+      parsedCards[walletAddress] = []
+    }
+
+    parsedCards[walletAddress].push(card.id)
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedCards))
+
+  }
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
