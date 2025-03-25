@@ -179,18 +179,7 @@ export const WalletBalance = () => {
 			</svg>
 		    </button>
 		</div>
-		<button
-		    className="bg-white border border-gray-200 hover:bg-gray-50 text-black font-medium px-4 py-2 rounded-xl shadow-sm flex items-center space-x-2 transition-colors"
-		    onClick={() => window.open('https://paywithmoon.com/', '_blank')}
-		>
-		    <img
-			src="/icons/Card.svg"
-			alt=""
-			className="h-5 w-5"
-		    />
-		    <span>Fondear Tarjeta</span>
-		</button>
-            </div>
+    </div>
 	    
             <div className="space-y-3">
 		{/* MEXA */}
