@@ -140,10 +140,10 @@ export const CardsWidget = () => {
       const data = await axios.get("/api/moonproxy?path=card&page=1&limit=10")
 
       const cardApiResponse: CardApiResponse = data.data
-      console.log(cardApiResponse.cards)
       
       // Just use the cards data directly from the API response
-      setCards(cardApiResponse.cards)
+      const ucards = address? userCards(address, cardApiResponse.cards) : []
+      setCards(ucards)
     } catch (err) {
       console.error('Error fetching cards:', err)
       setError('Error al cargar las tarjetas. Por favor, intente de nuevo.')
@@ -179,7 +179,6 @@ export const CardsWidget = () => {
             }
         )
 
-       console.log(newCardData.status)
        fetchCards()
 
     } catch (err) {
@@ -207,8 +206,6 @@ export const CardsWidget = () => {
             }
 
         )
-
-        console.log(invoiceData.data)
 
         setInvoiceDetails(invoiceData.data)
         setIsConfirmModalOpen(true)
