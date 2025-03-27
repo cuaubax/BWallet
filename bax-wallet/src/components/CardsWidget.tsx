@@ -1,7 +1,7 @@
-import axios from 'axios';
-import { headers } from 'next/headers';
+import axios from 'axios'
+import { headers } from 'next/headers'
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi';
+import { useAccount } from 'wagmi'
 
 interface CardData {
     id: string;
