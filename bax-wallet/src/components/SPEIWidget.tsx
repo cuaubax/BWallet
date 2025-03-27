@@ -6,8 +6,10 @@ import { parseUnits, erc20Abi } from 'viem'
 const FEE_PERCENTAGE = 0.015
 const MEXA = {
   symbol: "MEX",
-  address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-  decimals: 8,
+  // Used USDT address for testing purposes. Using MEXA for deployment
+  // address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+  address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
+  decimals: 6,
   logoUrl: "/icons/MEXAS.svg"
 }
 
@@ -27,7 +29,7 @@ export const SPEIWidget = () => {
     address: MEXA.address as `0x${string}`,
     abi: erc20Abi,
     functionName: "transfer",
-    args: ['0xD64F77C974bC81fB80BC52B72Ef2a98398745521' , BigInt(1000000)],
+    args: [address! , BigInt(parseUnits(mexasTotal, MEXA.decimals))],
   })
 
   const { 
