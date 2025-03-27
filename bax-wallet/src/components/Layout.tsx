@@ -6,6 +6,7 @@ import { BatchTransfer } from './Dispersions'
 import { WalletBalance } from './WalletBalance'
 import { Contacts } from './ContactsWidget'
 import { CardsWidget } from './CardsWidget'
+import { SPEIWidget } from './SPEIWidget'
 
 import { useState } from 'react'
 
@@ -15,7 +16,8 @@ const tabs = [
   { id: 'swap', label: 'Cambios', icon: "/icons/SwapVertical.svg" },
   { id: 'earn', label: 'Ahorro', icon: "/icons/Wallet.svg" },
   { id: 'contacts', label: 'Contactos', icon: "/icons/Contactos.svg" },
-  { id: 'cards', label: 'Tarjetas', icon: "/icons/Card.svg" }
+  { id: 'cards', label: 'Tarjetas', icon: "/icons/Card.svg" },
+  { id: 'spei', label: 'Envíos SPEI', icon: "/icons/SPEI.svg"}
 ] as const
 
 export const Layout = () => {
@@ -76,6 +78,7 @@ export const Layout = () => {
         {activeTab === 'earn' && <AaveComponent />}
         {activeTab === 'cards' && <CardsWidget />}
         {activeTab === 'contacts' && <Contacts />}
+		{activeTab === 'spei' && <SPEIWidget />}
       </main>
     </div>
   )
