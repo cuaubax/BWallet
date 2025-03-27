@@ -7,6 +7,7 @@ import { WalletBalance } from './WalletBalance'
 import { Contacts } from './ContactsWidget'
 import { CardsWidget } from './CardsWidget'
 import { SPEIWidget } from './SPEIWidget'
+import { ServiciosWidget } from './ServiciosWidget'
 
 import { useState } from 'react'
 
@@ -17,7 +18,8 @@ const tabs = [
   { id: 'earn', label: 'Ahorro', icon: "/icons/Wallet.svg" },
   { id: 'contacts', label: 'Contactos', icon: "/icons/Contactos.svg" },
   { id: 'cards', label: 'Tarjetas', icon: "/icons/Card.svg" },
-  { id: 'spei', label: 'Envíos SPEI', icon: "/icons/SPEI.svg"}
+  { id: 'spei', label: 'Envíos SPEI', icon: "/icons/SPEI.svg"},
+  { id: 'servicios', label: 'Pago de Servicios', icon: "/icons/Servicios.svg"}
 ] as const
 
 export const Layout = () => {
@@ -79,6 +81,7 @@ export const Layout = () => {
         {activeTab === 'cards' && <CardsWidget />}
         {activeTab === 'contacts' && <Contacts />}
 		{activeTab === 'spei' && <SPEIWidget />}
+		{activeTab === 'servicios' && <ServiciosWidget />}
       </main>
     </div>
   )
