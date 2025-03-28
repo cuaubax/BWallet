@@ -1,17 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from 'wagmi'
-import { emitter } from '../utils/eventBus'
-import { parseUnits, erc20Abi } from 'viem'
+import { useAccount } from 'wagmi'
+import { useMexaTransaction } from '@/hooks/mexaTransaction'
 
-const FEE_PERCENTAGE = 0.015
-const MEXA = {
-  symbol: "MEX",
-  // Used USDT address for testing purposes. Using MEXA for deployment
-  // address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-  address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
-  decimals: 6,
-  logoUrl: "/icons/MEXAS.svg"
-}
+const FEE_PERCENTAGE = 0.02
 
 type ServiceType = 'phone' | 'internet' | 'water' | 'power'
 
@@ -25,7 +16,7 @@ const services: ServiceInfo[] = [
     {
       id: 'phone',
       name: 'Teléfono',
-      icon: "/icons/Phone.svg"
+      icon: "/icons/Phone.svg",
     },
     {
       id: 'internet',
@@ -54,6 +45,30 @@ export const ServiciosWidget = () => {
     const [error, setError] = useState<string | null>(null)
 
     const { address } = useAccount()
+
+    const {
+        executeTransaction,
+        isProcessing,
+        isPending,
+        isLoading,
+        error: txError,
+        success,
+        setError: setTxError
+    } = useMexaTransaction({
+        amount,
+        recipientAddress: address!,
+        onSuccess: () => {
+            setTimeout(() => {
+                handleCloseModal()
+            }, 2000)
+        }
+    })
+
+    useEffect(() => {
+        if (txError) {
+          setError(txError)
+        }
+      }, [txError])
     
     useEffect(() => {
         setMounted(true)
@@ -85,11 +100,34 @@ export const ServiciosWidget = () => {
         }
       }
 
+    /*
     const handleSubmit = () => {
         // WIP add metamask functions
         console.log("clicked")
+    }*/
+
+    const handleSubmit = () => {
+
+        if (!referenceNumber) {
+          setError('Por favor ingresa un número de referencia')
+          return
+        }
+        
+        if (!amount || parseFloat(amount) <= 0) {
+          setError('Por favor ingresa un monto válido')
+          return
+        }
+        
+        if (!address) {
+          setError('Conecta tu wallet primero')
+          return
+        }
+        
+        // now using hook 
+        executeTransaction()
     }
     
+    if (!mounted) return null
 
     return (
         <div className="bg-sectionBackground rounded-xl p-5 shadow-sm border border-gray-100">
@@ -119,6 +157,7 @@ export const ServiciosWidget = () => {
                   <button 
                     onClick={handleCloseModal}
                     className="text-gray-500 hover:text-gray-700"
+                    disabled={isProcessing || isPending || isLoading}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -135,6 +174,7 @@ export const ServiciosWidget = () => {
                     value={referenceNumber}
                     onChange={handleReferenceChange}
                     placeholder="Ingresa el número de referencia"
+                    disabled={isProcessing || isPending || isLoading}
                   />
                 </div>
                 
@@ -148,6 +188,7 @@ export const ServiciosWidget = () => {
                       value={amount}
                       onChange={handleAmountChange}
                       placeholder="0.00"
+                      disabled={isProcessing || isPending || isLoading}
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                       MXN
@@ -162,13 +203,45 @@ export const ServiciosWidget = () => {
                   </div>
                 )}
                 
+                {/* Success Display */}
+                {success && (
+                  <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm font-medium border border-green-200">
+                    <div className="flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {success}
+                    </div>
+                  </div>
+                )}
+                
                 {/* Submit Button */}
                 <button
-                  className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-200 disabled:text-gray-400"
                   onClick={handleSubmit}
+                  disabled={isProcessing || isPending || isLoading || !amount || !referenceNumber}
                 >
-                  Pagar
+                  {isPending ? 'Confirmando en wallet...' : 
+                   isLoading ? 'Confirmando en blockchain...' : 
+                   isProcessing ? 'Procesando...' : 'Pagar'}
                 </button>
+                
+                {/* Processing Status */}
+                {(isProcessing || isPending || isLoading) && (
+                  <div className="flex items-center justify-center mt-3 text-xs text-gray-500">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {isPending ? (
+                      <span>Por favor confirma la transacción en tu wallet...</span>
+                    ) : isLoading ? (
+                      <span>Esperando confirmación en la blockchain...</span>
+                    ) : (
+                      <span>Procesando tu pago...</span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

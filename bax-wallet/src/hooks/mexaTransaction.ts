@@ -6,8 +6,8 @@ import { parseUnits, erc20Abi } from 'viem'
 export const MEXA = {
     symbol: "MEX",
     // Used USDT address for testing purposes. Using MEXA for deployment
-    // address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-    address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
+    address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+    //address: '0xDF617aA28bbdC3F1004291e1dEC24c617A4AE3aD',
     decimals: 6,
     logoUrl: "/icons/MEXAS.svg"
   }
